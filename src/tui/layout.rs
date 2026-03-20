@@ -3,6 +3,7 @@ use ratatui::{
         Constraint::{Length, Min, Percentage},
         Layout,
     },
+    widgets::{Block, BorderType},
     Frame,
 };
 
@@ -24,16 +25,22 @@ pub fn render(f: &mut Frame, app: &App) {
         area
     };
 
-    // Guard: need at least 4 rows (3 fixed rows + 1 for content). Render nothing on tiny terminals.
-    if content_area.height < 4 {
+    // Guard: need at least 6 rows (2 for border + 3 fixed rows + 1 for content).
+    // Check before rendering anything to avoid drawing a border into a too-small area.
+    if content_area.height < 6 {
         return;
     }
 
-    let width = content_area.width;
-    let outer = Layout::vertical([Min(0), Length(1), Length(1), Length(1)]).split(content_area);
+    // Draw border around the entire calculator and shrink into the inner area.
+    let border = Block::bordered().border_type(BorderType::Plain);
+    let inner_area = border.inner(content_area);
+    f.render_widget(border, content_area);
 
-    // width is derived from content_area (post-centering), so this threshold is always
-    // evaluated against the capped MAX_WIDTH content column, not the raw terminal width.
+    let width = inner_area.width;
+    let outer = Layout::vertical([Min(0), Length(1), Length(1), Length(1)]).split(inner_area);
+
+    // width is derived from inner_area (post-border, post-centering), so this threshold is always
+    // evaluated against the capped content column width, not the raw terminal width.
     if width < 60 {
         stack_pane::render(f, outer[0], &app.state, app.precision);
     } else {
@@ -109,11 +116,49 @@ mod tests {
     }
 
     #[test]
+    fn test_tiny_terminal_renders_nothing() {
+        // height=5 < 6 minimum: guard fires before any rendering, buffer stays blank.
+        let buf = render_layout(80, 5);
+        let content = full_content(&buf);
+        assert!(
+            content.chars().all(|c| c == ' '),
+            "terminal below minimum height should render nothing"
+        );
+    }
+
+    #[test]
     fn test_fixed_rows_always_present() {
         // mode bar renders "[NORMAL]" — always present regardless of terminal size
         let buf = render_layout(80, 10);
         let content = full_content(&buf);
         assert!(content.contains("[NORMAL]"));
+    }
+
+    #[test]
+    fn test_border_present() {
+        // 80 cols < MAX_WIDTH so content_area starts at col 0 (no centering offset).
+        // BorderType::Plain corner chars: ┌ (top-left), ┐ (top-right), └ (bot-left), ┘ (bot-right).
+        let buf = render_layout(80, 20);
+        assert_eq!(
+            buf.cell((0u16, 0u16)).unwrap().symbol(),
+            "┌",
+            "top-left corner"
+        );
+        assert_eq!(
+            buf.cell((79u16, 0u16)).unwrap().symbol(),
+            "┐",
+            "top-right corner"
+        );
+        assert_eq!(
+            buf.cell((0u16, 19u16)).unwrap().symbol(),
+            "└",
+            "bottom-left corner"
+        );
+        assert_eq!(
+            buf.cell((79u16, 19u16)).unwrap().symbol(),
+            "┘",
+            "bottom-right corner"
+        );
     }
 
     #[test]
