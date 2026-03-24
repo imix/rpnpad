@@ -64,7 +64,12 @@
 - **check-if-affected (src/tui/app.rs)**: updated — InsertSubmit parses numbers,
   AlphaSubmit dispatches commands only; two separate action sets
 
+## DoD Resolutions (AC-6)
+- **check-if-affected (src/tui/widgets/stack_pane.rs)**: updated — empty rows now show
+  HP48-style position labels (`4:`, `3:`, `2:`, `1:`) with DIM style; `label_col_width`
+  unified to use `height` so label column is consistent across empty and value rows
+
 ## Status
-- **State:** needs-rework
+- **State:** complete
 - **Created:** 2026-03-21
 - **Last verified:** 2026-03-24

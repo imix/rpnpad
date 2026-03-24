@@ -33,8 +33,14 @@
 - `src/tui/layout.rs` — updated corner char test (╭), new title/separator tests
 - `src/tui/widgets/hints_pane.rs` — new bordered block test
 
+## DoD Resolutions (AC-7)
+- **check-if-affected (src/tui/widgets/stack_pane.rs)**: updated — added
+  `Padding::horizontal(1)` to stack block; `block.inner()` accounts for padding automatically
+- **check-if-affected (src/tui/widgets/hints_pane.rs)**: updated — added
+  `Padding::horizontal(1)` to hints block; same pattern
+
 ## Status
-- **State:** needs-rework
+- **State:** complete
 - **Created:** 2026-03-24
 - **Last verified:** 2026-03-24
 
