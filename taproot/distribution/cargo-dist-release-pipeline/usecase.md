@@ -107,6 +107,9 @@ sequenceDiagram
 - When the maintainer pushes the tag
 - Then cargo-dist fails the workflow before creating any release, and the error is visible in the Actions log
 
+## Implementations <!-- taproot-managed -->
+- [cargo-dist GitHub Actions Release Pipeline](./github-actions/impl.md)
+
 ## Status
 - **State:** specified
 - **Created:** 2026-03-24
