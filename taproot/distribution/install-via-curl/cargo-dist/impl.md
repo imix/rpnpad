@@ -27,6 +27,6 @@ All ACs are satisfied by upstream implementations:
 ## DoR Resolutions
 
 ## Status
-- **State:** in-progress
+- **State:** complete
 - **Created:** 2026-03-24
 - **Last verified:** 2026-03-24
