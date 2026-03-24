@@ -28,7 +28,10 @@ calculator state.
 
 **Goal:** Enable users on Linux and macOS to install rpncalc with a single command — no Rust toolchain required
 
-- **[cargo-dist-release-pipeline](./distribution/cargo-dist-release-pipeline/usecase.md)** `[specified]` — Actor: Maintainer (solo developer)
+- **[cargo-dist-release-pipeline](./distribution/cargo-dist-release-pipeline/usecase.md)** `[implemented]` — Actor: Maintainer (solo developer)
+  - [github-actions](./distribution/cargo-dist-release-pipeline/github-actions/impl.md) `[complete]` (2 commits, 3 tests)
+- **[install-via-curl](./distribution/install-via-curl/usecase.md)** `[specified]` — Actor: CLI power user (Linux or macOS)
+- **[install-via-homebrew](./distribution/install-via-homebrew/usecase.md)** `[specified]` — Actor: CLI power user (macOS)
 
 ## [mathematical-operations](./mathematical-operations/intent.md) `[active]`
 
@@ -77,4 +80,4 @@ mistakes at any point, and store intermediate results in named registers.
   - [tui](./state-and-memory/undo-redo/tui/impl.md) `[complete]` (0 commits, 1 test)
 
 ---
-7 intents · 14 behaviours · 13 implementations · 13/13 complete
+7 intents · 16 behaviours · 14 implementations · 14/14 complete

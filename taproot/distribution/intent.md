@@ -21,6 +21,8 @@ Enable users on Linux and macOS to install rpncalc with a single command — no 
 
 ## Behaviours <!-- taproot-managed -->
 - [Maintainer publishes a release via cargo-dist](./cargo-dist-release-pipeline/usecase.md)
+- [User installs rpncalc via Homebrew](./install-via-homebrew/usecase.md)
+- [User installs rpncalc via curl installer](./install-via-curl/usecase.md)
 
 ## Status
 - **State:** draft
