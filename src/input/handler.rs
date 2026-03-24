@@ -13,7 +13,7 @@ pub fn handle_key(mode: &AppMode, event: KeyEvent) -> Action {
         AppMode::Normal => match event.code {
             KeyCode::Char('q') => Action::Quit,
             KeyCode::Char('i') => Action::EnterAlphaMode,
-            KeyCode::Char(c) if c.is_ascii_digit() => Action::AlphaChar(c),
+            KeyCode::Char(c) if c.is_ascii_digit() => Action::InsertChar(c),
             KeyCode::Char('r') if event.modifiers.contains(KeyModifiers::CONTROL) => Action::Redo,
             KeyCode::Char('+') => Action::Execute(Op::Add),
             KeyCode::Char('-') => Action::Execute(Op::Sub),
@@ -46,22 +46,29 @@ pub fn handle_key(mode: &AppMode, event: KeyEvent) -> Action {
             KeyCode::Char(c) => dispatch_chord_key(category, c),
             _ => Action::ChordInvalid,
         },
+        AppMode::Insert(_) => match event.code {
+            KeyCode::Enter => Action::InsertSubmit,
+            KeyCode::Esc => Action::InsertCancel,
+            KeyCode::Backspace => Action::InsertBackspace,
+            KeyCode::Char('+') => Action::InsertSubmitThen(Op::Add),
+            KeyCode::Char('-') => Action::InsertSubmitThen(Op::Sub),
+            KeyCode::Char('*') => Action::InsertSubmitThen(Op::Mul),
+            KeyCode::Char('/') => Action::InsertSubmitThen(Op::Div),
+            KeyCode::Char('^') => Action::InsertSubmitThen(Op::Pow),
+            KeyCode::Char('%') => Action::InsertSubmitThen(Op::Mod),
+            KeyCode::Char('!') => Action::InsertSubmitThen(Op::Factorial),
+            KeyCode::Char('n') => Action::InsertSubmitThen(Op::Negate),
+            KeyCode::Char('s') => Action::InsertSubmitThen(Op::Swap),
+            KeyCode::Char('d') => Action::InsertSubmitThen(Op::Drop),
+            KeyCode::Char('p') => Action::InsertSubmitThen(Op::Dup),
+            KeyCode::Char('r') => Action::InsertSubmitThen(Op::Rotate),
+            KeyCode::Char(c) => Action::InsertChar(c),
+            _ => Action::Noop,
+        },
         AppMode::Alpha(_) => match event.code {
             KeyCode::Enter => Action::AlphaSubmit,
             KeyCode::Esc => Action::AlphaCancel,
             KeyCode::Backspace => Action::AlphaBackspace,
-            KeyCode::Char('+') => Action::AlphaSubmitThen(Op::Add),
-            KeyCode::Char('-') => Action::AlphaSubmitThen(Op::Sub),
-            KeyCode::Char('*') => Action::AlphaSubmitThen(Op::Mul),
-            KeyCode::Char('/') => Action::AlphaSubmitThen(Op::Div),
-            KeyCode::Char('^') => Action::AlphaSubmitThen(Op::Pow),
-            KeyCode::Char('%') => Action::AlphaSubmitThen(Op::Mod),
-            KeyCode::Char('!') => Action::AlphaSubmitThen(Op::Factorial),
-            KeyCode::Char('n') => Action::AlphaSubmitThen(Op::Negate),
-            KeyCode::Char('s') => Action::AlphaSubmitThen(Op::Swap),
-            KeyCode::Char('d') => Action::AlphaSubmitThen(Op::Drop),
-            KeyCode::Char('p') => Action::AlphaSubmitThen(Op::Dup),
-            KeyCode::Char('r') => Action::AlphaSubmitThen(Op::Rotate),
             KeyCode::Char(c) => Action::AlphaChar(c),
             _ => Action::Noop,
         },
@@ -157,24 +164,24 @@ mod tests {
         }
     }
 
-    // AC 1: digit in Normal → AlphaChar
+    // AC 1: digit in Normal → InsertChar
     #[test]
-    fn test_normal_digit_enters_alpha() {
+    fn test_normal_digit_produces_insert_char() {
         assert_eq!(
             handle_key(&AppMode::Normal, key(KeyCode::Char('3'))),
-            Action::AlphaChar('3')
+            Action::InsertChar('3')
         );
         assert_eq!(
             handle_key(&AppMode::Normal, key(KeyCode::Char('0'))),
-            Action::AlphaChar('0')
+            Action::InsertChar('0')
         );
         assert_eq!(
             handle_key(&AppMode::Normal, key(KeyCode::Char('9'))),
-            Action::AlphaChar('9')
+            Action::InsertChar('9')
         );
     }
 
-    // AC 2: 'i' in Normal → EnterAlphaMode
+    // AC 2: 'i' in Normal → EnterAlphaMode (true Alpha mode)
     #[test]
     fn test_normal_i_enters_alpha_mode() {
         assert_eq!(
@@ -441,34 +448,107 @@ mod tests {
         );
     }
 
-    // AC 6 (handler side): printable char in Alpha → AlphaChar
+    // Insert mode: printable char → InsertChar
     #[test]
-    fn test_alpha_char_appends() {
+    fn test_insert_char_appends() {
         assert_eq!(
-            handle_key(&AppMode::Alpha("4".into()), key(KeyCode::Char('2'))),
-            Action::AlphaChar('2')
+            handle_key(&AppMode::Insert("4".into()), key(KeyCode::Char('2'))),
+            Action::InsertChar('2')
         );
     }
 
-    // AC 3: Enter in Alpha → AlphaSubmit
+    // Insert mode: Enter → InsertSubmit
+    #[test]
+    fn test_insert_enter_submits() {
+        assert_eq!(
+            handle_key(&AppMode::Insert("42".into()), key(KeyCode::Enter)),
+            Action::InsertSubmit
+        );
+    }
+
+    // Insert mode: Esc → InsertCancel
+    #[test]
+    fn test_insert_esc_cancels() {
+        assert_eq!(
+            handle_key(&AppMode::Insert("42".into()), key(KeyCode::Esc)),
+            Action::InsertCancel
+        );
+    }
+
+    // Insert mode: unknown key → Noop
+    #[test]
+    fn test_insert_unknown_key_is_noop() {
+        assert_eq!(
+            handle_key(&AppMode::Insert("".into()), key(KeyCode::F(1))),
+            Action::Noop
+        );
+    }
+
+    // Insert mode: op shortcut keys trigger InsertSubmitThen
+    #[test]
+    fn test_insert_op_shortcuts() {
+        let cases = [
+            ('+', Action::InsertSubmitThen(Op::Add)),
+            ('-', Action::InsertSubmitThen(Op::Sub)),
+            ('*', Action::InsertSubmitThen(Op::Mul)),
+            ('/', Action::InsertSubmitThen(Op::Div)),
+            ('^', Action::InsertSubmitThen(Op::Pow)),
+            ('%', Action::InsertSubmitThen(Op::Mod)),
+            ('!', Action::InsertSubmitThen(Op::Factorial)),
+            ('s', Action::InsertSubmitThen(Op::Swap)),
+            ('d', Action::InsertSubmitThen(Op::Drop)),
+            ('p', Action::InsertSubmitThen(Op::Dup)),
+            ('r', Action::InsertSubmitThen(Op::Rotate)),
+            ('n', Action::InsertSubmitThen(Op::Negate)),
+        ];
+        for (c, expected) in &cases {
+            assert_eq!(
+                handle_key(&AppMode::Insert("3".into()), key(KeyCode::Char(*c))),
+                *expected,
+                "Insert mode key '{}' should be InsertSubmitThen",
+                c
+            );
+        }
+    }
+
+    // Alpha mode: ALL chars (including shortcut keys) → AlphaChar
+    #[test]
+    fn test_alpha_mode_all_chars_literal() {
+        let shortcut_chars = ['+', '-', '*', '/', '^', '%', '!', 's', 'd', 'p', 'r', 'n'];
+        for c in &shortcut_chars {
+            assert_eq!(
+                handle_key(&AppMode::Alpha("".into()), key(KeyCode::Char(*c))),
+                Action::AlphaChar(*c),
+                "Alpha mode key '{}' should be literal AlphaChar, not a shortcut",
+                c
+            );
+        }
+        assert_eq!(
+            handle_key(&AppMode::Alpha("r1".into()), key(KeyCode::Char('r'))),
+            Action::AlphaChar('r'),
+            "'r' in Alpha mode should be literal, not Rotate"
+        );
+    }
+
+    // Alpha mode: Enter → AlphaSubmit
     #[test]
     fn test_alpha_enter_submits() {
         assert_eq!(
-            handle_key(&AppMode::Alpha("42".into()), key(KeyCode::Enter)),
+            handle_key(&AppMode::Alpha("r1 RCL".into()), key(KeyCode::Enter)),
             Action::AlphaSubmit
         );
     }
 
-    // AC 4: Esc in Alpha → AlphaCancel
+    // Alpha mode: Esc → AlphaCancel
     #[test]
     fn test_alpha_esc_cancels() {
         assert_eq!(
-            handle_key(&AppMode::Alpha("42".into()), key(KeyCode::Esc)),
+            handle_key(&AppMode::Alpha("r1".into()), key(KeyCode::Esc)),
             Action::AlphaCancel
         );
     }
 
-    // Unknown key in Alpha → Noop
+    // Alpha mode: unknown key → Noop
     #[test]
     fn test_alpha_unknown_key_is_noop() {
         assert_eq!(

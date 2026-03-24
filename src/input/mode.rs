@@ -14,6 +14,7 @@ pub enum ChordCategory {
 #[allow(dead_code)]
 pub enum AppMode {
     Normal,
+    Insert(String),
     Alpha(String),
     AlphaStore(String),
     Chord(ChordCategory),

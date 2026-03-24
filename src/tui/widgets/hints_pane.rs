@@ -94,14 +94,16 @@ fn chord_leaders_to_lines(leaders: &[(&str, &str)]) -> Vec<Line<'static>> {
         .collect()
 }
 
-fn registers_to_lines(state: &CalcState) -> Vec<Line<'static>> {
+fn registers_to_lines(state: &CalcState, max_width: usize) -> Vec<Line<'static>> {
     let mut entries: Vec<_> = state.registers.iter().collect();
     entries.sort_by(|(a, _), (b, _)| a.cmp(b));
     entries
         .into_iter()
         .map(|(name, val)| {
             let val_str = val.display_with_base(state.base);
-            Line::raw(format!("{name}  {val_str}  {name} RCL"))
+            let line = format!("{name}  {val_str}  {name} RCL");
+            let truncated: String = line.chars().take(max_width).collect();
+            Line::raw(truncated)
         })
         .collect()
 }
@@ -121,7 +123,7 @@ pub fn render(f: &mut Frame, area: Rect, mode: &AppMode, state: &CalcState) {
         return;
     }
 
-    if matches!(mode, AppMode::Alpha(_)) {
+    if matches!(mode, AppMode::Insert(_)) {
         let lines = vec![
             Line::raw("Enter  push"),
             Line::raw("Esc    cancel"),
@@ -133,6 +135,18 @@ pub fn render(f: &mut Frame, area: Rect, mode: &AppMode, state: &CalcState) {
             Line::raw("%  mod    p  dup"),
             Line::raw("n  neg    s  swap"),
             Line::raw("d  drop   r  rot"),
+        ];
+        f.render_widget(Paragraph::new(lines), area);
+        return;
+    }
+
+    if matches!(mode, AppMode::Alpha(_)) {
+        let lines = vec![
+            Line::raw("Enter  submit"),
+            Line::raw("Esc    cancel"),
+            Line::raw("Bksp   delete"),
+            Line::raw(""),
+            Line::styled("all chars literal", dim),
         ];
         f.render_widget(Paragraph::new(lines), area);
         return;
@@ -180,7 +194,7 @@ pub fn render(f: &mut Frame, area: Rect, mode: &AppMode, state: &CalcState) {
     if !state.registers.is_empty() {
         lines.push(Line::raw(""));
         lines.push(Line::styled("REGISTERS", dim));
-        lines.extend(registers_to_lines(state));
+        lines.extend(registers_to_lines(state, area.width as usize));
     }
 
     f.render_widget(Paragraph::new(lines), area);
@@ -253,16 +267,16 @@ mod tests {
     }
 
     #[test]
-    fn test_alpha_mode_shows_push_hint() {
-        let buf = render_hints(AppMode::Alpha(String::new()), CalcState::new(), 40, 10);
+    fn test_insert_mode_shows_push_hint() {
+        let buf = render_hints(AppMode::Insert(String::new()), CalcState::new(), 40, 10);
         let content = full_content(&buf);
         assert!(content.contains("push"));
         assert!(!content.contains("ARITHMETIC"));
     }
 
     #[test]
-    fn test_alpha_mode_shows_cancel_hint() {
-        let buf = render_hints(AppMode::Alpha(String::new()), CalcState::new(), 40, 10);
+    fn test_insert_mode_shows_cancel_hint() {
+        let buf = render_hints(AppMode::Insert(String::new()), CalcState::new(), 40, 10);
         let content = full_content(&buf);
         assert!(content.contains("cancel"));
     }
@@ -438,11 +452,11 @@ mod tests {
     }
 
     #[test]
-    fn test_registers_not_shown_in_alpha_mode() {
+    fn test_registers_not_shown_in_insert_mode() {
         let mut s = CalcState::new();
         s.registers
             .insert("r1".to_string(), CalcValue::from_f64(1.0));
-        let buf = render_hints(AppMode::Alpha(String::new()), s, 40, 15);
+        let buf = render_hints(AppMode::Insert(String::new()), s, 40, 15);
         let content = full_content(&buf);
         assert!(!content.contains("REGISTERS"));
     }
@@ -477,26 +491,36 @@ mod tests {
         );
     }
 
-    // AC 4: alpha mode shows AlphaSubmitThen bindings (all 12)
+    // Insert mode shows InsertSubmitThen bindings (all 12 op shortcuts)
     #[test]
-    fn test_alpha_mode_shows_submit_then_bindings() {
-        let buf = render_hints(AppMode::Alpha(String::new()), CalcState::new(), 40, 15);
+    fn test_insert_mode_shows_submit_then_bindings() {
+        let buf = render_hints(AppMode::Insert(String::new()), CalcState::new(), 40, 15);
         let content = full_content(&buf);
-        assert!(content.contains("add"), "alpha mode should show 'add' hint");
-        assert!(content.contains("sub"), "alpha mode should show 'sub' hint");
-        assert!(content.contains("mul"), "alpha mode should show 'mul' hint");
-        assert!(content.contains("div"), "alpha mode should show 'div' hint");
-        assert!(content.contains("mod"), "alpha mode should show 'mod' hint");
-        assert!(content.contains("dup"), "alpha mode should show 'dup' hint");
+        assert!(content.contains("add"), "Insert mode should show 'add' hint");
+        assert!(content.contains("sub"), "Insert mode should show 'sub' hint");
+        assert!(content.contains("mul"), "Insert mode should show 'mul' hint");
+        assert!(content.contains("div"), "Insert mode should show 'div' hint");
+        assert!(content.contains("mod"), "Insert mode should show 'mod' hint");
+        assert!(content.contains("dup"), "Insert mode should show 'dup' hint");
     }
 
-    // AC 4: alpha mode still shows push/cancel/delete
+    // Insert mode still shows push/cancel/delete
     #[test]
-    fn test_alpha_mode_still_shows_push_cancel() {
-        let buf = render_hints(AppMode::Alpha(String::new()), CalcState::new(), 40, 15);
+    fn test_insert_mode_still_shows_push_cancel() {
+        let buf = render_hints(AppMode::Insert(String::new()), CalcState::new(), 40, 15);
         let content = full_content(&buf);
         assert!(content.contains("push"));
         assert!(content.contains("cancel"));
+    }
+
+    // Alpha mode shows submit/cancel/delete (no op shortcuts)
+    #[test]
+    fn test_alpha_mode_shows_submit_cancel() {
+        let buf = render_hints(AppMode::Alpha(String::new()), CalcState::new(), 40, 15);
+        let content = full_content(&buf);
+        assert!(content.contains("submit"));
+        assert!(content.contains("cancel"));
+        assert!(!content.contains("add"), "Alpha mode should NOT show op shortcuts");
     }
 
     // AC 6: AlphaStore mode shows STORE NAME header and store prompt

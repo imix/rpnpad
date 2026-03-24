@@ -15,7 +15,8 @@ use crate::input::mode::AppMode;
 pub fn render(f: &mut Frame, area: Rect, mode: &AppMode, state: &CalcState) {
     let mode_str = match mode {
         AppMode::Normal | AppMode::Chord(_) => "[NORMAL]",
-        AppMode::Alpha(_) | AppMode::AlphaStore(_) => "[INSERT]",
+        AppMode::Insert(_) | AppMode::AlphaStore(_) => "[INSERT]",
+        AppMode::Alpha(_) => "[ALPHA]",
     };
 
     let right_str = if state.base == Base::Hex {
@@ -82,15 +83,28 @@ mod tests {
         );
     }
 
-    // AC 2: alpha mode shows [INSERT]
+    // Insert mode shows [INSERT]
     #[test]
-    fn test_alpha_mode_shows_insert() {
+    fn test_insert_mode_shows_insert() {
+        let state = CalcState::new();
+        let buf = render_mode_bar(&AppMode::Insert(String::new()), &state, 40);
+        let content = row_content(&buf, 0);
+        assert!(
+            content.contains("[INSERT]"),
+            "Insert mode should show '[INSERT]': {:?}",
+            content
+        );
+    }
+
+    // Alpha mode shows [ALPHA]
+    #[test]
+    fn test_alpha_mode_shows_alpha() {
         let state = CalcState::new();
         let buf = render_mode_bar(&AppMode::Alpha(String::new()), &state, 40);
         let content = row_content(&buf, 0);
         assert!(
-            content.contains("[INSERT]"),
-            "alpha mode should show '[INSERT]': {:?}",
+            content.contains("[ALPHA]"),
+            "Alpha mode should show '[ALPHA]': {:?}",
             content
         );
     }

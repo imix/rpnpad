@@ -85,6 +85,83 @@ impl App {
                 self.mode = AppMode::Alpha(String::new());
                 self.error_message = None;
             }
+            Action::InsertChar(c) => {
+                let pushed = match &mut self.mode {
+                    AppMode::Insert(buf) => {
+                        buf.push(c);
+                        true
+                    }
+                    _ => false,
+                };
+                if !pushed {
+                    self.mode = AppMode::Insert(c.to_string());
+                }
+                self.error_message = None;
+            }
+            Action::InsertSubmit => {
+                let mode = std::mem::replace(&mut self.mode, AppMode::Normal);
+                if let AppMode::Insert(buf) = mode {
+                    self.error_message = None;
+                    if buf.is_empty() {
+                        return;
+                    }
+                    if let Ok(val) = parse_value(&buf) {
+                        let pre_op = self.state.clone();
+                        self.state.push(val);
+                        self.undo_history.snapshot(&pre_op);
+                    } else {
+                        self.error_message =
+                            Some(format!("Cannot parse: {} (expected a number)", buf));
+                    }
+                }
+            }
+            Action::InsertSubmitThen(op) => {
+                let buf = match &self.mode {
+                    AppMode::Insert(buf) => buf.clone(),
+                    _ => String::new(),
+                };
+                self.mode = AppMode::Normal;
+                self.error_message = None;
+
+                if !buf.is_empty() {
+                    if let Ok(val) = parse_value(&buf) {
+                        let pre_op = self.state.clone();
+                        self.state.push(val);
+                        self.undo_history.snapshot(&pre_op);
+                    } else {
+                        self.error_message = Some(format!("Cannot parse: {}", buf));
+                        return;
+                    }
+                }
+
+                let pre_op = self.state.clone();
+                match self.dispatch(Action::Execute(op)) {
+                    Ok(()) => {
+                        self.undo_history.snapshot(&pre_op);
+                        self.error_message = None;
+                    }
+                    Err(e) => {
+                        self.error_message = Some(e.to_string());
+                    }
+                }
+            }
+            Action::InsertBackspace => {
+                let should_reset = match &mut self.mode {
+                    AppMode::Insert(buf) => {
+                        buf.pop();
+                        buf.is_empty()
+                    }
+                    _ => false,
+                };
+                if should_reset {
+                    self.mode = AppMode::Normal;
+                }
+                self.error_message = None;
+            }
+            Action::InsertCancel => {
+                self.mode = AppMode::Normal;
+                self.error_message = None;
+            }
             Action::EnterStoreMode => {
                 if self.state.stack.is_empty() {
                     self.error_message = Some("Cannot store: stack is empty".to_string());
@@ -94,15 +171,11 @@ impl App {
                 }
             }
             Action::AlphaChar(c) => {
-                let pushed = match &mut self.mode {
+                match &mut self.mode {
                     AppMode::Alpha(buf) | AppMode::AlphaStore(buf) => {
                         buf.push(c);
-                        true
                     }
-                    _ => false,
-                };
-                if !pushed {
-                    self.mode = AppMode::Alpha(c.to_string());
+                    _ => {}
                 }
                 self.error_message = None;
             }
@@ -134,12 +207,6 @@ impl App {
                         if buf.is_empty() {
                             return;
                         }
-                        if let Ok(val) = parse_value(&buf) {
-                            let pre_op = self.state.clone();
-                            self.state.push(val);
-                            self.undo_history.snapshot(&pre_op);
-                            return;
-                        }
                         match parse_command(&buf) {
                             Ok(action) => {
                                 let pre_op = self.state.clone();
@@ -154,7 +221,7 @@ impl App {
                             }
                             Err(_) => {
                                 self.error_message = Some(format!(
-                                    "Unknown input: {} (use 'name STORE' or 'name RCL')",
+                                    "Unknown command: {} (use 'name STORE', 'name RCL', or 'name DEL')",
                                     buf
                                 ));
                             }
@@ -175,52 +242,6 @@ impl App {
                     self.mode = AppMode::Normal;
                 }
                 self.error_message = None;
-            }
-            Action::AlphaSubmitThen(op) => {
-                let buf = match &self.mode {
-                    AppMode::Alpha(buf) => buf.clone(),
-                    _ => String::new(),
-                };
-                self.mode = AppMode::Normal;
-                self.error_message = None;
-
-                if !buf.is_empty() {
-                    if let Ok(val) = parse_value(&buf) {
-                        let pre_op = self.state.clone();
-                        self.state.push(val);
-                        self.undo_history.snapshot(&pre_op);
-                    } else {
-                        match parse_command(&buf) {
-                            Ok(action) => {
-                                let pre_op = self.state.clone();
-                                match self.dispatch(action) {
-                                    Ok(()) => {
-                                        self.undo_history.snapshot(&pre_op);
-                                    }
-                                    Err(e) => {
-                                        self.error_message = Some(e.to_string());
-                                        return;
-                                    }
-                                }
-                            }
-                            Err(_) => {
-                                self.error_message = Some(format!("Unknown input: {}", buf));
-                                return;
-                            }
-                        }
-                    }
-                }
-
-                let pre_op = self.state.clone();
-                match self.dispatch(Action::Execute(op)) {
-                    Ok(()) => {
-                        self.undo_history.snapshot(&pre_op);
-                        self.error_message = None;
-                    }
-                    Err(e) => {
-                        self.error_message = Some(e.to_string());
-                    }
-                }
             }
             Action::AlphaCancel => {
                 self.mode = AppMode::Normal;
@@ -326,10 +347,14 @@ impl App {
             | Action::Redo
             | Action::EnterAlphaMode
             | Action::EnterStoreMode
+            | Action::InsertChar(_)
+            | Action::InsertBackspace
+            | Action::InsertSubmit
+            | Action::InsertSubmitThen(_)
+            | Action::InsertCancel
             | Action::AlphaChar(_)
             | Action::AlphaBackspace
             | Action::AlphaSubmit
-            | Action::AlphaSubmitThen(_)
             | Action::AlphaCancel
             | Action::EnterChordMode(_)
             | Action::ChordCancel
@@ -443,13 +468,6 @@ mod tests {
         assert!(!app.undo_history.can_undo());
     }
 
-    #[test]
-    fn test_enter_alpha_mode() {
-        let mut app = App::new();
-        app.apply(Action::EnterAlphaMode);
-        assert_eq!(app.mode, AppMode::Alpha(String::new()));
-        assert!(app.error_message.is_none());
-    }
 
     #[test]
     fn test_store_register() {
@@ -511,89 +529,98 @@ mod tests {
         assert!(app.error_message.is_none());
     }
 
-    // AC 1: AlphaChar in Normal → transitions to Alpha mode with that char
+    // EnterAlphaMode → transitions to true Alpha mode (i key)
     #[test]
-    fn test_alpha_char_in_normal_enters_alpha() {
+    fn test_enter_alpha_mode_creates_alpha() {
         let mut app = App::new();
-        app.apply(Action::AlphaChar('5'));
-        assert_eq!(app.mode, AppMode::Alpha("5".into()));
+        app.apply(Action::EnterAlphaMode);
+        assert_eq!(app.mode, AppMode::Alpha(String::new()));
         assert!(app.error_message.is_none());
     }
 
-    // AC 1: AlphaChar in Alpha → appends to buffer
+    // InsertChar in Normal → creates Insert mode with that char
     #[test]
-    fn test_alpha_char_appends_to_buffer() {
+    fn test_insert_char_in_normal_creates_insert_mode() {
         let mut app = App::new();
-        app.apply(Action::AlphaChar('1'));
-        app.apply(Action::AlphaChar('2'));
-        assert_eq!(app.mode, AppMode::Alpha("12".into()));
+        app.apply(Action::InsertChar('5'));
+        assert_eq!(app.mode, AppMode::Insert("5".into()));
+        assert!(app.error_message.is_none());
     }
 
-    // AC 2: AlphaSubmit with integer buffer → pushes value, returns to Normal
+    // InsertChar in Insert mode → appends to buffer
     #[test]
-    fn test_alpha_submit_pushes_integer() {
+    fn test_insert_char_appends_to_buffer() {
         let mut app = App::new();
-        app.mode = AppMode::Alpha("42".into());
-        app.apply(Action::AlphaSubmit);
+        app.apply(Action::InsertChar('1'));
+        app.apply(Action::InsertChar('2'));
+        assert_eq!(app.mode, AppMode::Insert("12".into()));
+    }
+
+    // InsertSubmit with integer buffer → pushes value, returns to Normal
+    #[test]
+    fn test_insert_submit_pushes_integer() {
+        let mut app = App::new();
+        app.mode = AppMode::Insert("42".into());
+        app.apply(Action::InsertSubmit);
         assert_eq!(app.mode, AppMode::Normal);
         assert_eq!(app.state.depth(), 1);
         assert!(app.error_message.is_none());
     }
 
-    // AC 2: AlphaSubmit with float buffer → pushes value, returns to Normal
+    // InsertSubmit with float buffer → pushes value, returns to Normal
     #[test]
-    fn test_alpha_submit_pushes_float() {
+    fn test_insert_submit_pushes_float() {
         let mut app = App::new();
-        app.mode = AppMode::Alpha("3.14".into());
-        app.apply(Action::AlphaSubmit);
+        app.mode = AppMode::Insert("3.14".into());
+        app.apply(Action::InsertSubmit);
         assert_eq!(app.mode, AppMode::Normal);
         assert_eq!(app.state.depth(), 1);
         assert!(app.error_message.is_none());
     }
 
-    // AC 2: AlphaSubmit with empty buffer → returns to Normal, stack unchanged
+    // InsertSubmit with empty buffer → returns to Normal, stack unchanged
     #[test]
-    fn test_alpha_submit_empty_buffer_returns_to_normal() {
+    fn test_insert_submit_empty_buffer_returns_to_normal() {
         let mut app = App::new();
-        app.mode = AppMode::Alpha(String::new());
-        app.apply(Action::AlphaSubmit);
+        app.mode = AppMode::Insert(String::new());
+        app.apply(Action::InsertSubmit);
         assert_eq!(app.mode, AppMode::Normal);
         assert_eq!(app.state.depth(), 0);
         assert!(app.error_message.is_none());
     }
 
-    // AC 2: AlphaSubmit with unrecognized input → mode Normal, error set
+    // InsertSubmit with non-numeric input → error (Insert mode only parses numbers)
     #[test]
-    fn test_alpha_submit_invalid_sets_error() {
+    fn test_insert_submit_non_numeric_sets_error() {
         let mut app = App::new();
-        app.mode = AppMode::Alpha("garbage".into());
-        app.apply(Action::AlphaSubmit);
+        app.mode = AppMode::Insert("garbage".into());
+        app.apply(Action::InsertSubmit);
         assert_eq!(app.mode, AppMode::Normal);
         assert!(app.error_message.is_some());
     }
 
-    // AC 4: AlphaCancel → returns to Normal, stack unchanged
+    // InsertCancel → returns to Normal, stack unchanged
     #[test]
-    fn test_alpha_cancel_returns_to_normal() {
+    fn test_insert_cancel_returns_to_normal() {
         let mut app = App::new();
         push_int(&mut app, 7);
-        app.mode = AppMode::Alpha("typing".into());
-        app.apply(Action::AlphaCancel);
+        app.mode = AppMode::Insert("typing".into());
+        app.apply(Action::InsertCancel);
         assert_eq!(app.mode, AppMode::Normal);
         assert_eq!(app.state.depth(), 1);
         assert!(app.error_message.is_none());
     }
 
-    // AC 2: AlphaSubmit snapshots undo history on successful push
+    // InsertSubmit snapshots undo history on successful push
     #[test]
-    fn test_alpha_submit_snapshots_undo() {
+    fn test_insert_submit_snapshots_undo() {
         let mut app = App::new();
-        app.mode = AppMode::Alpha("10".into());
-        app.apply(Action::AlphaSubmit);
+        app.mode = AppMode::Insert("10".into());
+        app.apply(Action::InsertSubmit);
         assert!(app.undo_history.can_undo());
     }
 
-    // M1: AlphaSubmit command dispatch path — STORE command
+    // AlphaSubmit command dispatch — STORE command (via Alpha mode)
     #[test]
     fn test_alpha_submit_store_command() {
         let mut app = App::new();
@@ -606,7 +633,7 @@ mod tests {
         assert!(app.error_message.is_none());
     }
 
-    // M1: AlphaSubmit command dispatch path — RCL command
+    // AlphaSubmit command dispatch — RCL command (via Alpha mode)
     #[test]
     fn test_alpha_submit_recall_command() {
         let mut app = App::new();
@@ -614,6 +641,28 @@ mod tests {
         app.apply(Action::StoreRegister("r1".into()));
         app.mode = AppMode::Alpha("r1 RCL".into());
         app.apply(Action::AlphaSubmit);
+        assert_eq!(app.mode, AppMode::Normal);
+        assert_eq!(app.state.depth(), 1);
+        assert!(app.error_message.is_none());
+    }
+
+    // Alpha mode: unrecognized command sets error
+    #[test]
+    fn test_alpha_submit_unknown_command_sets_error() {
+        let mut app = App::new();
+        app.mode = AppMode::Alpha("garbage".into());
+        app.apply(Action::AlphaSubmit);
+        assert_eq!(app.mode, AppMode::Normal);
+        assert!(app.error_message.is_some());
+    }
+
+    // AlphaCancel in Alpha mode → returns to Normal
+    #[test]
+    fn test_alpha_cancel_returns_to_normal() {
+        let mut app = App::new();
+        push_int(&mut app, 7);
+        app.mode = AppMode::Alpha("r1".into());
+        app.apply(Action::AlphaCancel);
         assert_eq!(app.mode, AppMode::Normal);
         assert_eq!(app.state.depth(), 1);
         assert!(app.error_message.is_none());
@@ -1039,7 +1088,7 @@ mod tests {
         assert_eq!(app.mode, AppMode::Normal);
         let msg = app.error_message.as_deref().unwrap_or("");
         assert!(
-            msg.contains("(use 'name STORE' or 'name RCL')"),
+            msg.contains("STORE") && msg.contains("RCL"),
             "error should contain STORE/RCL hint, got: {}",
             msg
         );

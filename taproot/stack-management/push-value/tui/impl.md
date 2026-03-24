@@ -52,7 +52,17 @@
 - `src/input/parser.rs` (inline) — all numeric formats
 - `src/engine/stack.rs` (inline) — push/pop behaviour
 
+## DoD Resolutions
+- **check-if-affected (src/tui/widgets/hints_pane.rs)**: updated — Insert mode
+  shows op shortcut hints; new Alpha mode shows "all chars literal" hint panel
+- **check-if-affected (src/tui/widgets/mode_bar.rs)**: updated — Alpha shows
+  [ALPHA], Insert shows [INSERT]
+- **check-if-affected (src/input/handler.rs)**: updated — new AppMode::Alpha arm
+  with all-literal char handling; Insert arm has InsertSubmitThen shortcuts
+- **check-if-affected (src/tui/app.rs)**: updated — InsertSubmit parses numbers,
+  AlphaSubmit dispatches commands only; two separate action sets
+
 ## Status
-- **State:** in-progress
+- **State:** complete
 - **Created:** 2026-03-21
 - **Last verified:** 2026-03-24

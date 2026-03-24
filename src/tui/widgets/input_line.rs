@@ -4,7 +4,9 @@ use crate::input::mode::AppMode;
 
 pub fn render(f: &mut Frame, area: Rect, mode: &AppMode) {
     let text = match mode {
-        AppMode::Alpha(buf) | AppMode::AlphaStore(buf) => format!("> {}_", buf),
+        AppMode::Insert(buf) | AppMode::Alpha(buf) | AppMode::AlphaStore(buf) => {
+            format!("> {}_", buf)
+        }
         _ => "> ".to_string(),
     };
     f.render_widget(Paragraph::new(text), area);
@@ -42,26 +44,50 @@ mod tests {
         );
     }
 
-    // AC 6: alpha mode shows buffer content and cursor
+    // Insert mode shows buffer content and cursor
     #[test]
-    fn test_alpha_mode_shows_buffer_and_cursor() {
-        let buf = render_input_line(&AppMode::Alpha("42".into()), 20);
+    fn test_insert_mode_shows_buffer_and_cursor() {
+        let buf = render_input_line(&AppMode::Insert("42".into()), 20);
         let content = row_content(&buf, 0);
         assert!(
             content.contains("> 42_"),
-            "alpha mode should show '> 42_': {:?}",
+            "Insert mode should show '> 42_': {:?}",
             content
         );
     }
 
-    // AC 6: alpha mode with empty buffer shows just cursor
+    // Insert mode with empty buffer shows just cursor
+    #[test]
+    fn test_insert_empty_buffer_shows_cursor() {
+        let buf = render_input_line(&AppMode::Insert(String::new()), 20);
+        let content = row_content(&buf, 0);
+        assert!(
+            content.contains("> _"),
+            "empty Insert buffer should show '> _': {:?}",
+            content
+        );
+    }
+
+    // Alpha mode shows buffer content and cursor
+    #[test]
+    fn test_alpha_mode_shows_buffer_and_cursor() {
+        let buf = render_input_line(&AppMode::Alpha("r1 RCL".into()), 20);
+        let content = row_content(&buf, 0);
+        assert!(
+            content.contains("> r1 RCL_"),
+            "Alpha mode should show '> r1 RCL_': {:?}",
+            content
+        );
+    }
+
+    // Alpha mode with empty buffer shows just cursor
     #[test]
     fn test_alpha_empty_buffer_shows_cursor() {
         let buf = render_input_line(&AppMode::Alpha(String::new()), 20);
         let content = row_content(&buf, 0);
         assert!(
             content.contains("> _"),
-            "empty alpha buffer should show '> _': {:?}",
+            "empty Alpha buffer should show '> _': {:?}",
             content
         );
     }
