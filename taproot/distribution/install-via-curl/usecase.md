@@ -105,6 +105,9 @@ sequenceDiagram
 - When installation succeeds
 - Then the installer prints the export line the user needs to add to their shell profile
 
+## Implementations <!-- taproot-managed -->
+- [cargo-dist installer + README](./cargo-dist/impl.md)
+
 ## Status
 - **State:** specified
 - **Created:** 2026-03-24
