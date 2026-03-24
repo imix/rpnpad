@@ -24,6 +24,12 @@ calculator state.
 - **[execute-chord-operation](./discoverability/execute-chord-operation/usecase.md)** `[specified]` — Actor: User (CLI power user)
   - [tui](./discoverability/execute-chord-operation/tui/impl.md) `[complete]` (0 commits, 1 test)
 
+## [distribution](./distribution/intent.md) `[draft]`
+
+**Goal:** Enable users on Linux and macOS to install rpncalc with a single command — no Rust toolchain required
+
+- **[cargo-dist-release-pipeline](./distribution/cargo-dist-release-pipeline/usecase.md)** `[specified]` — Actor: Maintainer (solo developer)
+
 ## [mathematical-operations](./mathematical-operations/intent.md) `[active]`
 
 **Goal:** Enable users to apply a comprehensive set of mathematical operations to
@@ -53,7 +59,8 @@ medium for RPN computation.
   - [tui](./stack-management/arrange-stack-values/tui/impl.md) `[complete]` (0 commits, 1 test)
 - **[push-value](./stack-management/push-value/usecase.md)** `[specified]` — Actor: User (CLI power user)
   - [tui](./stack-management/push-value/tui/impl.md) `[complete]` (2 commits, 7 tests)
-- **[roll-to-top](./stack-management/roll-to-top/usecase.md)** `[specified]` — Actor: User (CLI power user)
+- **[roll-to-top](./stack-management/roll-to-top/usecase.md)** `[implemented]` — Actor: User (CLI power user)
+  - [tui](./stack-management/roll-to-top/tui/impl.md) `[complete]` (2 commits, 6 tests)
 
 ## [state-and-memory](./state-and-memory/intent.md) `[active]`
 
@@ -70,4 +77,4 @@ mistakes at any point, and store intermediate results in named registers.
   - [tui](./state-and-memory/undo-redo/tui/impl.md) `[complete]` (0 commits, 1 test)
 
 ---
-6 intents · 13 behaviours · 12 implementations · 12/12 complete
+7 intents · 14 behaviours · 13 implementations · 13/13 complete

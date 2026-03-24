@@ -38,6 +38,8 @@
 
 ## Commits
 <!-- taproot link-commits will fill this -->
+- `5d087e3047be51f79388daec1760877d9a6056f6` — (auto-linked by taproot link-commits)
+- `706a54a252a42144f8fd68113382106fc21616ac` — (auto-linked by taproot link-commits)
 
 ## Tests
 - `src/engine/stack.rs` (inline) — roll mechanics (AC-1 postconditions),
