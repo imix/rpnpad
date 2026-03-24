@@ -10,7 +10,7 @@ Compact summary for AI agents. Read this before diving into individual taproot d
 **Goal:** Enable users to persist personal workflow defaults so rpncalc behaves
 correctly from the first keypress of every session.
 
-- **[configure-defaults](./configuration/configure-defaults/usecase.md)** `[implemented]` — Actor: User (CLI power user)
+- **[configure-defaults](./configuration/configure-defaults/usecase.md)** `[specified]` — Actor: User (CLI power user)
   - [tui](./configuration/configure-defaults/tui/impl.md) `[complete]` (0 commits, 1 test)
 
 ## [discoverability](./discoverability/intent.md) `[active]`
@@ -19,9 +19,9 @@ correctly from the first keypress of every session.
 documentation, through a context-sensitive hints pane that adapts to
 calculator state.
 
-- **[browse-hints-pane](./discoverability/browse-hints-pane/usecase.md)** `[implemented]` — Actor: User (CLI power user)
+- **[browse-hints-pane](./discoverability/browse-hints-pane/usecase.md)** `[specified]` — Actor: User (CLI power user)
   - [tui](./discoverability/browse-hints-pane/tui/impl.md) `[complete]` (0 commits ⚠ no tests)
-- **[execute-chord-operation](./discoverability/execute-chord-operation/usecase.md)** `[implemented]` — Actor: User (CLI power user)
+- **[execute-chord-operation](./discoverability/execute-chord-operation/usecase.md)** `[specified]` — Actor: User (CLI power user)
   - [tui](./discoverability/execute-chord-operation/tui/impl.md) `[complete]` (0 commits, 1 test)
 
 ## [mathematical-operations](./mathematical-operations/intent.md) `[active]`
@@ -29,9 +29,9 @@ calculator state.
 **Goal:** Enable users to apply a comprehensive set of mathematical operations to
 stacked values and control the numeric modes that govern their computation.
 
-- **[apply-operation](./mathematical-operations/apply-operation/usecase.md)** `[implemented]` — Actor: User (CLI power user)
+- **[apply-operation](./mathematical-operations/apply-operation/usecase.md)** `[specified]` — Actor: User (CLI power user)
   - [tui](./mathematical-operations/apply-operation/tui/impl.md) `[complete]` (0 commits, 1 test)
-- **[switch-numeric-mode](./mathematical-operations/switch-numeric-mode/usecase.md)** `[implemented]` — Actor: User (CLI power user)
+- **[switch-numeric-mode](./mathematical-operations/switch-numeric-mode/usecase.md)** `[specified]` — Actor: User (CLI power user)
   - [tui](./mathematical-operations/switch-numeric-mode/tui/impl.md) `[complete]` (0 commits, 2 tests)
 
 ## [stack-management](./stack-management/intent.md) `[active]`
@@ -39,9 +39,9 @@ stacked values and control the numeric modes that govern their computation.
 **Goal:** Enable users to build and organise a stack of numeric values as the input
 medium for RPN computation.
 
-- **[arrange-stack-values](./stack-management/arrange-stack-values/usecase.md)** `[implemented]` — Actor: User (CLI power user)
+- **[arrange-stack-values](./stack-management/arrange-stack-values/usecase.md)** `[specified]` — Actor: User (CLI power user)
   - [tui](./stack-management/arrange-stack-values/tui/impl.md) `[complete]` (0 commits, 1 test)
-- **[push-value](./stack-management/push-value/usecase.md)** `[implemented]` — Actor: User (CLI power user)
+- **[push-value](./stack-management/push-value/usecase.md)** `[specified]` — Actor: User (CLI power user)
   - [tui](./stack-management/push-value/tui/impl.md) `[complete]` (0 commits, 2 tests)
 
 ## [state-and-memory](./state-and-memory/intent.md) `[active]`
@@ -49,13 +49,13 @@ medium for RPN computation.
 **Goal:** Enable users to preserve calculation state across sessions, recover from
 mistakes at any point, and store intermediate results in named registers.
 
-- **[clipboard-copy](./state-and-memory/clipboard-copy/usecase.md)** `[implemented]` — Actor: User (CLI power user)
+- **[clipboard-copy](./state-and-memory/clipboard-copy/usecase.md)** `[specified]` — Actor: User (CLI power user)
   - [tui](./state-and-memory/clipboard-copy/tui/impl.md) `[complete]` (0 commits, 1 test)
-- **[named-registers](./state-and-memory/named-registers/usecase.md)** `[implemented]` — Actor: User (CLI power user)
+- **[named-registers](./state-and-memory/named-registers/usecase.md)** `[specified]` — Actor: User (CLI power user)
   - [tui](./state-and-memory/named-registers/tui/impl.md) `[complete]` (0 commits, 2 tests)
-- **[session-persistence](./state-and-memory/session-persistence/usecase.md)** `[implemented]` — Actor: User (CLI power user) / System (SIGTERM handler)
+- **[session-persistence](./state-and-memory/session-persistence/usecase.md)** `[specified]` — Actor: User (CLI power user)
   - [tui](./state-and-memory/session-persistence/tui/impl.md) `[complete]` (0 commits, 2 tests)
-- **[undo-redo](./state-and-memory/undo-redo/usecase.md)** `[implemented]` — Actor: User (CLI power user)
+- **[undo-redo](./state-and-memory/undo-redo/usecase.md)** `[specified]` — Actor: User (CLI power user)
   - [tui](./state-and-memory/undo-redo/tui/impl.md) `[complete]` (0 commits, 1 test)
 
 ---

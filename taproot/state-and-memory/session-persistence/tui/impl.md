@@ -11,7 +11,8 @@
 - Session path: `~/.rpncalc/session.json` (via `dirs::home_dir()`)
 - Only `CalcState` (stack + registers) is persisted — undo history is
   intentionally not persisted
-- `RESET` command deletes `session.json` and clears `CalcState` in-process
+- `RESET` command (typed in alpha mode) saves an empty `CalcState` to
+  `session.json` and clears the running state — overwrites, does not delete
 
 ## Source Files
 - `src/config/session.rs` — save(), load(), atomic write logic

@@ -18,6 +18,9 @@ User (CLI power user)
 - **`persist_session = false`**: session is not saved on exit; rpncalc
   always starts with an empty stack and no registers
 - **SIGTERM**: signal-hook handler triggers the same save path as clean exit
+- **RESET command**: user types `RESET` in alpha mode and presses Enter —
+  CalcState is cleared (stack and registers emptied) and the empty state is
+  saved to session.json immediately; takes effect in the running session
 
 ## Error Conditions
 - **Write failure** (disk full, permissions): prior session.json left intact
@@ -48,6 +51,8 @@ stateDiagram-v2
 **AC-3:** Given `session.json` is corrupt on launch, then rpncalc starts with empty state and an informative error is shown on the ErrorLine.
 
 **AC-4:** Given `persist_session = false`, then session.json is not read on launch and not written on exit.
+
+**AC-5:** Given rpncalc is running, when the user types `RESET` in alpha mode and presses Enter, then CalcState is cleared and the empty state is written to session.json immediately.
 
 ## Related
 - **Sibling**: [User undoes or redoes a state-mutating operation](../undo-redo/usecase.md)
