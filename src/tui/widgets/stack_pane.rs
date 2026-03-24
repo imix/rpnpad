@@ -2,7 +2,7 @@ use ratatui::{
     layout::Rect,
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, BorderType, Paragraph},
+    widgets::{Block, BorderType, Padding, Paragraph},
     Frame,
 };
 
@@ -12,7 +12,8 @@ pub fn render(f: &mut Frame, area: Rect, state: &CalcState, precision: usize) {
     let block = Block::bordered()
         .border_type(BorderType::Rounded)
         .title("Stack")
-        .title_style(Style::default().fg(Color::Cyan));
+        .title_style(Style::default().fg(Color::Cyan))
+        .padding(Padding::horizontal(1));
     let inner = block.inner(area);
     f.render_widget(block, area);
 
@@ -20,11 +21,8 @@ pub fn render(f: &mut Frame, area: Rect, state: &CalcState, precision: usize) {
     let width = inner.width as usize;
     let depth = state.stack.len();
 
-    let label_col_width: usize = if depth == 0 {
-        2
-    } else {
-        format!("{}:", depth).len()
-    };
+    // Label width based on height so empty-stack labels align with value-row labels.
+    let label_col_width = format!("{}:", height).len();
 
     let val_col_width = width.saturating_sub(label_col_width + 1);
 
@@ -37,10 +35,15 @@ pub fn render(f: &mut Frame, area: Rect, state: &CalcState, precision: usize) {
     let visible_count = visible_slice.len();
     let mut lines: Vec<Line> = Vec::with_capacity(height);
 
-    // Blank rows at the top when stack is shallow
+    // Empty rows at the top show position labels (HP48 style) with no value beside them.
     let blank_count = height.saturating_sub(visible_count);
-    for _ in 0..blank_count {
-        lines.push(Line::raw(""));
+    for i in 0..blank_count {
+        let position = height - i;
+        let label_span = Span::styled(
+            format!("{:>lw$}: ", position, lw = label_col_width - 1),
+            Style::default().add_modifier(Modifier::DIM),
+        );
+        lines.push(Line::from(vec![label_span]));
     }
 
     // Value rows: oldest-visible (top) → newest/X (bottom)
@@ -108,21 +111,25 @@ mod tests {
             .collect()
     }
 
-    // AC 5: empty stack → blank rows, no values
+    // AC 6: empty stack → position labels visible in all inner rows, no values beside them
     #[test]
     fn test_empty_stack_blank_rows() {
         let state = CalcState::new();
-        // 20×6: border at rows 0 and 5, inner rows 1–4
+        // 20×6: border at rows 0 and 5, inner rows 1–4 (height=4)
+        // Labels: 4:, 3:, 2:, 1: from top to bottom
         let buf = render_pane(&state, 20, 6);
-        for row in 1..=4u16 {
-            let content = row_content(&buf, row);
-            assert!(
-                !content.chars().any(|c| c.is_ascii_digit()),
-                "row {} should be blank (no digits), got: {:?}",
-                row,
-                content
-            );
-        }
+        let row1 = row_content(&buf, 1);
+        let row4 = row_content(&buf, 4);
+        assert!(
+            row1.contains("4:"),
+            "top empty row should show label '4:', got: {:?}",
+            row1
+        );
+        assert!(
+            row4.contains("1:"),
+            "bottom empty row should show label '1:', got: {:?}",
+            row4
+        );
     }
 
     // AC 1, 2: single value → 1: label at bottom, value visible
@@ -202,9 +209,9 @@ mod tests {
     fn test_x_row_is_cyan_bold() {
         let mut state = CalcState::new();
         push_int(&mut state, 99);
-        // 20×4: X row at terminal row 2; value span starts at col 4 (inner.x=1 + "X: "=3)
+        // 20×4: border(1) + padding(1) = inner.x=2; label "1: "=3 chars → value at col 5
         let buf = render_pane(&state, 20, 4);
-        let cell = buf.cell((4u16, 2u16)).unwrap();
+        let cell = buf.cell((5u16, 2u16)).unwrap();
         assert_eq!(cell.fg, Color::Cyan, "X value span should be Cyan");
         assert!(
             cell.modifier.contains(Modifier::BOLD),
@@ -219,9 +226,9 @@ mod tests {
         push_int(&mut state, 10);
         push_int(&mut state, 20);
         // 20×4: inner height 2; Y at row 1, X at row 2
-        // Y value span starts at col 4 (inner.x=1 + "Y: "=3)
+        // border(1) + padding(1) = inner.x=2; label "2: "=3 chars → value at col 5
         let buf = render_pane(&state, 20, 4);
-        let cell = buf.cell((4u16, 1u16)).unwrap();
+        let cell = buf.cell((5u16, 1u16)).unwrap();
         assert_ne!(cell.fg, Color::Cyan, "Y value span should NOT be Cyan");
     }
 
@@ -232,9 +239,9 @@ mod tests {
         // 20-digit integer
         let big = IBig::from(12345678901234567890u64);
         state.push(CalcValue::Integer(big));
-        // 10×4: inner width=8; label "X: "=3 chars, val_col_width=5
+        // 12×4: border(2) + padding(2) = inner width=8; label "1: "=3 chars, val_col_width=5
         // "12345678901234567890" (20 chars) > 5 → truncated to "1234…"
-        let buf = render_pane(&state, 10, 4);
+        let buf = render_pane(&state, 12, 4);
         let bottom = row_content(&buf, 2);
         assert!(
             bottom.contains('…'),

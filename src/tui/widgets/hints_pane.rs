@@ -2,7 +2,7 @@ use ratatui::{
     layout::Rect,
     style::{Color, Modifier, Style},
     text::Line,
-    widgets::{Block, BorderType, Paragraph},
+    widgets::{Block, BorderType, Padding, Paragraph},
     Frame,
 };
 
@@ -112,7 +112,8 @@ pub fn render(f: &mut Frame, area: Rect, mode: &AppMode, state: &CalcState) {
     let block = Block::bordered()
         .border_type(BorderType::Rounded)
         .title("Hints")
-        .title_style(Style::default().fg(Color::Cyan));
+        .title_style(Style::default().fg(Color::Cyan))
+        .padding(Padding::horizontal(1));
     let inner = block.inner(area);
     f.render_widget(block, area);
 
