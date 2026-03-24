@@ -95,6 +95,9 @@ stateDiagram-v2
 - When the TUI renders
 - Then nothing is rendered (buffer remains blank)
 
+## Implementations <!-- taproot-managed -->
+- [Visual Polish TUI](./tui/impl.md)
+
 ## Status
 - **State:** specified
 - **Created:** 2026-03-24
