@@ -20,7 +20,7 @@ User (CLI power user)
 ## Alternate Flows
 - **Constants (π, e, φ)**: no operands consumed; value is pushed directly
   onto the stack as an additional item
-- **Negate (`n`)**: unary — flips sign of X in-place
+- **Negate (`n`)**: unary — flips sign of position 1 in-place
 
 ## Error Conditions
 - **Stack underflow**: fewer operands than required — error on ErrorLine,
@@ -29,19 +29,19 @@ User (CLI power user)
   stack unchanged; no partial state written
 
 ## Postconditions
-- For binary ops: stack depth decreases by 1; result at X
-- For unary ops: stack depth unchanged; result replaces X
-- For constants: stack depth increases by 1; constant value at X
+- For binary ops: stack depth decreases by 1; result at position 1
+- For unary ops: stack depth unchanged; result replaces position 1
+- For constants: stack depth increases by 1; constant value at position 1
 
 ## Flow
 
 ```mermaid
 stateDiagram-v2
     [*] --> Normal
-    Normal --> Normal : immediate key — ok → result at X
+    Normal --> Normal : immediate key — ok → result at position 1
     Normal --> Normal : immediate key — underflow/domain error → ErrorLine
     Normal --> Chord : chord leader key
-    Chord --> Normal : second key — ok → result at X
+    Chord --> Normal : second key — ok → result at position 1
     Chord --> Normal : second key — invalid → ErrorLine
     Chord --> Normal : Esc — cancelled
 ```
@@ -49,7 +49,7 @@ stateDiagram-v2
 ## Acceptance Criteria
 **AC-1:** Given the stack has sufficient depth, when the user presses an immediate operation key (e.g. `+`), then the operation executes and the result is at the top of the stack.
 
-**AC-2:** Given the stack has ≥2 items, when a binary operation is applied, then the stack depth decreases by 1 and the result is at X.
+**AC-2:** Given the stack has ≥2 items, when a binary operation is applied, then the stack depth decreases by 1 and the result is at position 1.
 
 **AC-3:** Given the stack has insufficient depth for the chosen operation, when the key is pressed, then an error is shown on the ErrorLine and the stack is unchanged.
 

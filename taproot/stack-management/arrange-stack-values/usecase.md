@@ -10,10 +10,10 @@ User (CLI power user)
 
 ## Main Flow
 1. User presses a single key in normal mode:
-   - `s` — swap: exchanges X and Y positions
-   - `p` — dup: duplicates X, pushing a copy onto the stack
-   - `d` — drop: discards X
-   - `r` — rotate: moves X to Z, Y to X, Z to Y (roll down top three)
+   - `s` — swap: exchanges positions 1 and 2
+   - `p` — dup: duplicates position 1, pushing a copy onto the stack
+   - `d` — drop: discards position 1
+   - `r` — rotate: cycles top three down (1→3, 2→1, 3→2)
    - clear — removes all values from the stack
 2. Stack updates immediately; display reflects new arrangement
 
@@ -38,13 +38,13 @@ stateDiagram-v2
 ```
 
 ## Acceptance Criteria
-**AC-1:** Given the stack has ≥1 item, when the user presses `p`, then X is duplicated at the top of the stack.
+**AC-1:** Given the stack has ≥1 item, when the user presses `p`, then position 1 is duplicated at the top of the stack.
 
-**AC-2:** Given the stack has ≥2 items, when the user presses `s`, then X and Y are exchanged.
+**AC-2:** Given the stack has ≥2 items, when the user presses `s`, then positions 1 and 2 are exchanged.
 
-**AC-3:** Given the stack has ≥1 item, when the user presses `d`, then X is removed from the stack.
+**AC-3:** Given the stack has ≥1 item, when the user presses `d`, then position 1 is removed from the stack.
 
-**AC-4:** Given the stack has ≥3 items, when the user presses `r`, then X moves to Z position, Y moves to X, and Z moves to Y.
+**AC-4:** Given the stack has ≥3 items, when the user presses `r`, then the top three items cycle down: position 1 moves to 3, position 2 moves to 1, and position 3 moves to 2.
 
 **AC-5:** Given insufficient stack depth for the chosen operation, when the key is pressed, then an error is shown on the ErrorLine and the stack is unchanged.
 

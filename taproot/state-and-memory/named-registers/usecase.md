@@ -15,13 +15,13 @@ User (CLI power user)
    literal; no operation shortcuts apply
 2. User types `<name> STORE` or `<name> RCL` and presses Enter
    (e.g. `r1 STORE`, `r1 RCL`)
-3. **STORE**: pops X from the stack and writes it into the named register
+3. **STORE**: pops position 1 from the stack and writes it into the named register
 4. **RCL**: pushes the register's value onto the stack (register preserved)
 5. Hints pane register section updates to reflect current register state
 
 ## Alternate Flows
 - **Quick-store (`S` key)**: from normal mode, user presses `S`, types the
-  register name, presses Enter — X is stored to the register *without being
+  register name, presses Enter — position 1 is stored to the register *without being
   removed from the stack* (peek semantics); mode returns to normal
 - **View registers**: all defined register names and values are visible in
   the hints pane register section at all times (when registers exist)
@@ -44,20 +44,20 @@ User (CLI power user)
 stateDiagram-v2
     [*] --> Normal
     Normal --> Alpha : i key → Alpha mode (all chars literal)
-    Alpha --> Normal : <name> STORE → pops X → register updated
+    Alpha --> Normal : <name> STORE → pops position 1 → register updated
     Alpha --> Normal : <name> RCL → pushes register value
     Alpha --> Normal : <name> DEL → register removed
     Normal --> AlphaStore : S key (stack non-empty)
-    AlphaStore --> Normal : type name + Enter → peeks X → register updated
+    AlphaStore --> Normal : type name + Enter → peeks position 1 → register updated
     AlphaStore --> Normal : Esc → cancelled, no change
 ```
 
 ## Acceptance Criteria
-**AC-1:** Given the stack has ≥1 item, when the user submits `<name> STORE` in Alpha mode (via `i`), then X is popped from the stack and stored under the given name.
+**AC-1:** Given the stack has ≥1 item, when the user submits `<name> STORE` in Alpha mode (via `i`), then position 1 is popped from the stack and stored under the given name.
 
 **AC-2:** Given a named register exists, when the user submits `<name> RCL` in Alpha mode (via `i`), then the register's value is pushed onto the stack and the register is preserved.
 
-**AC-3:** Given the stack has ≥1 item, when the user presses `S`, types a name, and presses Enter, then X is stored to the register without being removed from the stack.
+**AC-3:** Given the stack has ≥1 item, when the user presses `S`, types a name, and presses Enter, then position 1 is stored to the register without being removed from the stack.
 
 **AC-4:** Given a named register exists, when the user submits `<name> DEL` in Alpha mode (via `i`), then the register is removed.
 

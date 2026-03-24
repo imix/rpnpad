@@ -10,10 +10,10 @@ User (CLI power user)
 
 ## Main Flow
 1. User presses `y` (yank) in normal mode
-2. The X value is formatted in the current base and representation style
+2. The position-1 value is formatted in the current base and representation style
    (e.g. `0xFF` in HEX/ZeroX style, `42` in DEC)
 3. The formatted string is written to the system clipboard
-4. No stack mutation — X remains on the stack
+4. No stack mutation — position 1 remains on the stack
 
 ## Error Conditions
 - **Empty stack**: error on ErrorLine, nothing copied
@@ -21,7 +21,7 @@ User (CLI power user)
   on ErrorLine, stack unchanged
 
 ## Postconditions
-- System clipboard contains the formatted X value
+- System clipboard contains the formatted position-1 value
 - Stack is unchanged
 
 ## Flow
@@ -29,13 +29,13 @@ User (CLI power user)
 ```mermaid
 stateDiagram-v2
     [*] --> Normal
-    Normal --> Normal : y — stack non-empty, clipboard ok → X copied
+    Normal --> Normal : y — stack non-empty, clipboard ok → position 1 copied
     Normal --> Normal : y — stack empty → ErrorLine
     Normal --> Normal : y — clipboard unavailable → ErrorLine
 ```
 
 ## Acceptance Criteria
-**AC-1:** Given the stack has ≥1 item and the clipboard is accessible, when the user presses `y`, then the X value formatted in the current base/style is written to the system clipboard and the stack is unchanged.
+**AC-1:** Given the stack has ≥1 item and the clipboard is accessible, when the user presses `y`, then the position-1 value formatted in the current base/style is written to the system clipboard and the stack is unchanged.
 
 **AC-2:** Given the stack is empty, when `y` is pressed, then an error is shown on the ErrorLine and nothing is copied.
 

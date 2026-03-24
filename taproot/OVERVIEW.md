@@ -36,12 +36,13 @@ stacked values and control the numeric modes that govern their computation.
 
 ## [presentation](./presentation/intent.md) `[active]`
 
-**Goal:** rpncalc presents a visually cohesive, professional TUI that reflects the
-quality of the tool — through consistent panel framing, a coherent color
-accent, and a clear visual hierarchy that guides the eye without getting
-in the way of computation.
+**Goal:** Enable users to experience a visually cohesive, professional TUI that
+reflects the quality of the tool — through consistent panel framing, a
+coherent color accent, and a clear visual hierarchy that guides the eye
+without getting in the way of computation.
 
 - **[polish-visual-style](./presentation/polish-visual-style/usecase.md)** `[specified]` — Actor: User (CLI power user)
+  - [tui](./presentation/polish-visual-style/tui/impl.md) `[complete]` (2 commits, 2 tests)
 
 ## [stack-management](./stack-management/intent.md) `[active]`
 
@@ -51,7 +52,8 @@ medium for RPN computation.
 - **[arrange-stack-values](./stack-management/arrange-stack-values/usecase.md)** `[specified]` — Actor: User (CLI power user)
   - [tui](./stack-management/arrange-stack-values/tui/impl.md) `[complete]` (0 commits, 1 test)
 - **[push-value](./stack-management/push-value/usecase.md)** `[specified]` — Actor: User (CLI power user)
-  - [tui](./stack-management/push-value/tui/impl.md) `[complete]` (0 commits, 7 tests)
+  - [tui](./stack-management/push-value/tui/impl.md) `[complete]` (2 commits, 7 tests)
+- **[roll-to-top](./stack-management/roll-to-top/usecase.md)** `[specified]` — Actor: User (CLI power user)
 
 ## [state-and-memory](./state-and-memory/intent.md) `[active]`
 
@@ -68,4 +70,4 @@ mistakes at any point, and store intermediate results in named registers.
   - [tui](./state-and-memory/undo-redo/tui/impl.md) `[complete]` (0 commits, 1 test)
 
 ---
-6 intents · 12 behaviours · 11 implementations · 11/11 complete
+6 intents · 13 behaviours · 12 implementations · 12/12 complete

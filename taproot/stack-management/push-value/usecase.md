@@ -30,7 +30,7 @@ User (CLI power user)
 
 ## Postconditions
 - Stack depth increases by 1
-- New value is at the top (X position)
+- New value is at position 1 (top)
 - Display updates to show the value in the current base/representation style
 - Stack position labels (`1:` at top, `2:`, `3:`…) are always visible regardless
   of stack depth; empty rows show the label with no value beside it

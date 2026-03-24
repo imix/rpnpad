@@ -22,6 +22,7 @@ medium for RPN computation.
 ## Behaviours <!-- taproot-managed -->
 - [User arranges stack values](./arrange-stack-values/usecase.md)
 - [User pushes a numeric value onto the stack](./push-value/usecase.md)
+- [User rolls a deep stack value to the top](./roll-to-top/usecase.md)
 
 
 ## Status
