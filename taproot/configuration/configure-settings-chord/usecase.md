@@ -172,6 +172,9 @@ stateDiagram-v2
 - When stack contains 1.23456e12 (above threshold)
 - Then 1.23456e12 displays in scientific notation
 
+## Implementations <!-- taproot-managed -->
+- [tui](./tui/impl.md)
+
 ## Status
 - **State:** specified
 - **Created:** 2026-03-25
