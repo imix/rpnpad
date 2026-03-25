@@ -19,6 +19,7 @@ targets = [
     "x86_64-apple-darwin",
 ]
 publish-jobs = ["homebrew"]
+allow-dirty = ["ci"]
 
 [dependencies]
 ratatui = "0.29"
