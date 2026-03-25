@@ -17,6 +17,8 @@
 
 ## Commits
 <!-- taproot link-commits will fill this -->
+- `a998d3b` — declare implementation
+- `ecbb346` — implement direct x² and √ keys
 
 ## Tests
 - `src/input/handler.rs` — AC-1: `q`→Square; AC-2: `w`→Sqrt; `Q`→Quit; Insert `q`/`w` shortcuts; AC-4: chords `fq`/`fs` unchanged
