@@ -17,16 +17,11 @@ description: |
 grade: stable
 confinement: strict
 
-plugs:
-  rpnpad-config:
-    interface: personal-files
-    write:
-      - $HOME/.config/rpnpad
-
 apps:
   rpnpad:
     command: bin/rpnpad
-    plugs: [rpnpad-config]
+    environment:
+      HOME: $SNAP_USER_COMMON
 
 parts:
   rpnpad:

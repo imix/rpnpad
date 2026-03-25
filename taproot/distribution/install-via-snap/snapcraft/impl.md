@@ -39,13 +39,15 @@ Integration tests require snapd and Snapcraft:
 
 ## DoD Resolutions
 - condition: document-current | note: README.md snap section already documents 'snap install rpnpad' with the snapd prerequisite — no update needed | resolved: 2026-03-25T19:42:45.328Z
+- condition: document-current | note: README snap section unchanged — HOME override is an internal detail; user-facing install command is identical | resolved: 2026-03-25T21:03:45.092Z
+
 - condition: document-current | note: README snap section unchanged — confinement change is not user-visible; install command is the same | resolved: 2026-03-25T20:19:38.445Z
 
 - condition: document-current | note: README snap section unchanged — CI mechanism change is not user-visible | resolved: 2026-03-25T20:07:22.698Z
 - condition: document-current | note: README snap section unchanged — external cause fix adds no new user-visible behaviour | resolved: 2026-03-25T19:53:54.998Z
 
 ## Status
-- **State:** needs-rework
+- **State:** complete
 - **Created:** 2026-03-25
 - **Last verified:** 2026-03-25
 
