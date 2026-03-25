@@ -6,8 +6,13 @@
 ## Design Decisions
 - All five ops map to single-key normal-mode bindings: `s`=swap, `p`=dup,
   `d`=drop, `r`=rotate, Enter-with-empty-buffer=dup (HP48 convention)
-- Clear has no dedicated key in normal mode — accessible via chord or
-  alpha command; Enter in normal mode duplicates rather than clears (HP convention)
+- `Backspace` added as alias for `d` (drop) in Normal mode — muscle memory
+  for users coming from text editors; no conflict because Backspace in Insert
+  mode already deletes the last typed char (different mode, different handler arm)
+- `Delete` added as the key for clear — removes all stack items; no error
+  when stack is already empty (`CalcState::clear()` is a no-op on empty stack)
+- `Op::Clear` already existed in the engine; this change is purely a keybinding
+  addition in handler.rs with no engine or app-layer changes required
 - All ops return `Result<>` — underflow surfaces as `CalcError::StackUnderflow`
   which the app layer renders to the ErrorLine
 
@@ -27,9 +32,9 @@
   rotate, clear including underflow cases and deep-stack invariants
 
 ## Status
-- **State:** complete
+- **State:** in-progress
 - **Created:** 2026-03-21
-- **Last verified:** 2026-03-21
+- **Last verified:** 2026-03-25
 
 ## Notes
 None
