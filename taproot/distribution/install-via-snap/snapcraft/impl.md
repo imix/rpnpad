@@ -9,7 +9,7 @@
 - `base: core22` (Ubuntu 22.04 LTS) — current stable base with long support horizon; avoids `core18` (deprecated) and `core24` (newer, less tested)
 - `grade: stable` — published to the stable channel; users get it by default without specifying a channel
 - Version sourced from `Cargo.toml` via `adopt-info` — keeps snap version in sync with crate version automatically
-- GitHub Actions integration: `snapcraft` can be invoked in the release workflow to build and publish the snap after the cargo-dist release succeeds
+- GitHub Actions integration: uses `snapcore/action-build@v1` to build the snap — the official action handles LXD, base snap provisioning, and build environment setup without requiring live Snap Store access during the build. Replaces the previous manual `snapcraft pack --destructive-mode` approach which failed because GitHub Actions runners cannot install snaps from the store at build time.
 
 ## Source Files
 - `snap/snapcraft.yaml` — snap build definition: name, version, confinement, build steps
@@ -40,7 +40,7 @@ Integration tests require snapd and Snapcraft:
 
 
 ## Status
-- **State:** complete
+- **State:** needs-rework
 - **Created:** 2026-03-25
 - **Last verified:** 2026-03-25
 
