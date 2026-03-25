@@ -11,7 +11,9 @@ use crate::input::{
 pub fn handle_key(mode: &AppMode, event: KeyEvent) -> Action {
     match mode {
         AppMode::Normal => match event.code {
-            KeyCode::Char('q') => Action::Quit,
+            KeyCode::Char('Q') => Action::Quit,
+            KeyCode::Char('q') => Action::Execute(Op::Square),
+            KeyCode::Char('w') => Action::Execute(Op::Sqrt),
             KeyCode::Char('i') => Action::EnterAlphaMode,
             KeyCode::Char(c) if c.is_ascii_digit() => Action::InsertChar(c),
             KeyCode::Char('r') if event.modifiers.contains(KeyModifiers::CONTROL) => Action::Redo,
@@ -59,6 +61,8 @@ pub fn handle_key(mode: &AppMode, event: KeyEvent) -> Action {
             KeyCode::Char('%') => Action::InsertSubmitThen(Op::Mod),
             KeyCode::Char('!') => Action::InsertSubmitThen(Op::Factorial),
             KeyCode::Char('n') => Action::InsertSubmitThen(Op::Negate),
+            KeyCode::Char('q') => Action::InsertSubmitThen(Op::Square),
+            KeyCode::Char('w') => Action::InsertSubmitThen(Op::Sqrt),
             KeyCode::Char('s') => Action::InsertSubmitThen(Op::Swap),
             KeyCode::Char('d') => Action::InsertSubmitThen(Op::Drop),
             KeyCode::Char('p') => Action::InsertSubmitThen(Op::Dup),
@@ -616,6 +620,83 @@ mod tests {
         assert_eq!(
             handle_key(&AppMode::AlphaStore("".into()), key(KeyCode::F(1))),
             Action::Noop
+        );
+    }
+
+    // AC-1: 'q' in Normal → Square (x²)
+    #[test]
+    fn test_normal_q_squares() {
+        assert_eq!(
+            handle_key(&AppMode::Normal, key(KeyCode::Char('q'))),
+            Action::Execute(Op::Square)
+        );
+    }
+
+    // AC-2: 'w' in Normal → Sqrt (√)
+    #[test]
+    fn test_normal_w_sqrts() {
+        assert_eq!(
+            handle_key(&AppMode::Normal, key(KeyCode::Char('w'))),
+            Action::Execute(Op::Sqrt)
+        );
+    }
+
+    // 'Q' (shift) in Normal → Quit (quit still accessible)
+    #[test]
+    fn test_normal_shift_q_quits() {
+        assert_eq!(
+            handle_key(&AppMode::Normal, key(KeyCode::Char('Q'))),
+            Action::Quit
+        );
+    }
+
+    // 'q' no longer quits
+    #[test]
+    fn test_normal_q_does_not_quit() {
+        assert_ne!(
+            handle_key(&AppMode::Normal, key(KeyCode::Char('q'))),
+            Action::Quit
+        );
+    }
+
+    // AC-4: f› chord still dispatches Square and Sqrt
+    #[test]
+    fn test_chord_fn_q_still_squares() {
+        assert_eq!(
+            handle_key(
+                &AppMode::Chord(ChordCategory::Functions),
+                key(KeyCode::Char('q'))
+            ),
+            Action::Execute(Op::Square)
+        );
+    }
+
+    #[test]
+    fn test_chord_fn_s_still_sqrts() {
+        assert_eq!(
+            handle_key(
+                &AppMode::Chord(ChordCategory::Functions),
+                key(KeyCode::Char('s'))
+            ),
+            Action::Execute(Op::Sqrt)
+        );
+    }
+
+    // Insert mode: 'q' → InsertSubmitThen(Square)
+    #[test]
+    fn test_insert_q_submit_then_square() {
+        assert_eq!(
+            handle_key(&AppMode::Insert("3".into()), key(KeyCode::Char('q'))),
+            Action::InsertSubmitThen(Op::Square)
+        );
+    }
+
+    // Insert mode: 'w' → InsertSubmitThen(Sqrt)
+    #[test]
+    fn test_insert_w_submit_then_sqrt() {
+        assert_eq!(
+            handle_key(&AppMode::Insert("9".into()), key(KeyCode::Char('w'))),
+            Action::InsertSubmitThen(Op::Sqrt)
         );
     }
 

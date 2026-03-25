@@ -119,6 +119,8 @@ Press *   →  1: 14
 | `%` | Modulo |
 | `!` | Factorial |
 | `n` | Negate position 1 |
+| `q` | Square position 1 (x²) |
+| `w` | Square root of position 1 (√x) |
 | `s` | Swap positions 1 and 2 |
 | `d` | Drop position 1 |
 | `p` | Duplicate position 1 |
@@ -129,7 +131,7 @@ Press *   →  1: 14
 | `y` | Yank (copy position 1 to clipboard) |
 | `S` | Store position 1 to a named register |
 | `i` | Enter Alpha mode (for register commands) |
-| `q` | Quit |
+| `Q` | Quit |
 
 ### Insert Mode
 
@@ -141,6 +143,8 @@ Entered by typing a digit or starting a number. All printable characters build t
 | `Esc` | Cancel, discard input |
 | `Backspace` | Delete last character |
 | `+` `-` `*` `/` `^` `%` `!` | Push value then apply operation |
+| `q` | Push value then square it (x²) |
+| `w` | Push value then take square root (√x) |
 | `s` `d` `p` `r` `n` | Push value then apply stack op |
 
 ### Browse Mode
@@ -179,7 +183,7 @@ Press `Esc` at any point to cancel.
 | `e` | eˣ |
 | `E` | 10ˣ |
 
-**`f` — Functions**
+**`f` — √ (functions)**
 
 | Key | Operation |
 |-----|-----------|

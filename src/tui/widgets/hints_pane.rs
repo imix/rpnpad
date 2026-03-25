@@ -18,6 +18,8 @@ const ARITHMETIC: &[(&str, &str)] = &[
     ("%", "mod"),
     ("!", "fact"),
     ("n", "neg"),
+    ("q", "x²"),
+    ("w", "√"),
 ];
 
 const STACK_OPS: &[(&str, &str)] = &[
@@ -54,14 +56,14 @@ const HEX_STYLE_OPS: &[(&str, &str)] = &[("c", "0xFF"), ("a", "$FF"), ("s", "#FF
 const CHORD_LEADERS: &[(&str, &str)] = &[
     ("t", "trig"),
     ("l", "log"),
-    ("f", "fn"),
+    ("f", "√"),
     ("c", "const"),
     ("m", "mode"),
     ("x", "base"),
     ("X", "hex"),
 ];
 
-const UNARY_OPS: &[(&str, &str)] = &[("!", "fact"), ("n", "neg")];
+const UNARY_OPS: &[(&str, &str)] = &[("!", "fact"), ("n", "neg"), ("q", "x²"), ("w", "√")];
 
 const CHORD_LEADERS_DEPTH0: &[(&str, &str)] =
     &[("c", "const"), ("m", "mode"), ("x", "base"), ("X", "hex")];
@@ -154,9 +156,10 @@ pub fn render(f: &mut Frame, area: Rect, mode: &AppMode, state: &CalcState) {
             Line::raw("+  add    -  sub"),
             Line::raw("*  mul    /  div"),
             Line::raw("^  pow    !  fact"),
-            Line::raw("%  mod    p  dup"),
-            Line::raw("n  neg    s  swap"),
-            Line::raw("d  drop   r  rot"),
+            Line::raw("%  mod    n  neg"),
+            Line::raw("q  x²    w  √"),
+            Line::raw("s  swap   d  drop"),
+            Line::raw("p  dup    r  rot"),
         ];
         f.render_widget(Paragraph::new(lines), area);
         return;
@@ -494,6 +497,69 @@ mod tests {
         let content = full_content(&buf);
         assert!(content.contains("aa"));
         assert!(content.contains("bb"));
+    }
+
+    // ── direct-common-functions: AC-3 / AC-5 ────────────────────────────────
+
+    // AC-3: depth≥2 → x² appears directly in Normal hints
+    #[test]
+    fn test_depth2_shows_square_directly() {
+        let buf = render_hints(AppMode::Normal, state_with_depth(2), 40, 20);
+        let content = full_content(&buf);
+        assert!(content.contains("x²"), "depth≥2 hints should show x² directly");
+    }
+
+    // AC-3: depth≥2 → √ appears directly in Normal hints
+    #[test]
+    fn test_depth2_shows_sqrt_directly() {
+        let buf = render_hints(AppMode::Normal, state_with_depth(2), 40, 20);
+        let content = full_content(&buf);
+        assert!(content.contains('√'), "depth≥2 hints should show √ directly");
+    }
+
+    // AC-3: depth==1 → x² and √ appear in unary hints
+    #[test]
+    fn test_depth1_shows_square_and_sqrt_directly() {
+        let buf = render_hints(AppMode::Normal, state_with_depth(1), 40, 20);
+        let content = full_content(&buf);
+        assert!(content.contains("x²"), "depth==1 hints should show x²");
+        assert!(content.contains('√'), "depth==1 hints should show √");
+    }
+
+    // AC-3: chord leader for f shows √ (not fn)
+    #[test]
+    fn test_chord_leader_f_shows_sqrt_symbol() {
+        let buf = render_hints(AppMode::Normal, state_with_depth(1), 40, 20);
+        let content = full_content(&buf);
+        assert!(content.contains('√'), "f› chord leader should display √");
+        assert!(!content.contains("fn"), "f› chord leader should not display opaque 'fn'");
+    }
+
+    // AC-5: recip (1/x) not shown directly in Normal-mode hints at depth≥1
+    #[test]
+    fn test_normal_hints_no_recip() {
+        let buf = render_hints(AppMode::Normal, state_with_depth(2), 40, 20);
+        let content = full_content(&buf);
+        assert!(!content.contains("recip"), "recip should not appear in Normal hints directly");
+    }
+
+    // AC-5: abs not shown directly in Normal-mode hints at depth≥1
+    #[test]
+    fn test_normal_hints_no_abs() {
+        let buf = render_hints(AppMode::Normal, state_with_depth(2), 40, 20);
+        let content = full_content(&buf);
+        // "abs" does not appear directly (only inside the f› chord submenu)
+        // but "ARITHMETIC" contains "add" not "abs" — safe check on mode not being Chord
+        assert!(!content.contains("abs"), "abs should not appear in Normal hints directly");
+    }
+
+    // Insert mode hints show q/w shortcuts
+    #[test]
+    fn test_insert_hints_show_square_and_sqrt() {
+        let buf = render_hints(AppMode::Insert(String::new()), CalcState::new(), 40, 15);
+        let content = full_content(&buf);
+        assert!(content.contains("x²"), "Insert mode hints should show x²");
+        assert!(content.contains('√'), "Insert mode hints should show √");
     }
 
     // ── Story 4.1: Named Memory Registers ────────────────────────────────────
