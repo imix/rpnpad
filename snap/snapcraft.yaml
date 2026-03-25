@@ -23,14 +23,10 @@ apps:
 
 parts:
   rpnpad:
-    plugin: rust
+    plugin: dump
     source: .
-    build-packages:
-      - pkg-config
-      - libxcb1-dev
-      - libxcb-render0-dev
-      - libxcb-shape0-dev
-      - libxcb-xfixes0-dev
+    organize:
+      rpnpad: bin/rpnpad
     override-pull: |
-      craftenv pull
-      craftenv set-version "$(grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')"
+      craftctl default
+      craftctl set version="$(cat version.txt)"
