@@ -26,6 +26,7 @@
 ## Commits
 - 1695d6a feat: complete Epic 1 — Core Engine Foundation
 - 7066c63 feat: complete Epics 2–4 + layout width cap
+- `3df48c0ab966ef1c51ad3f3d1eb13d20c700cd10` — (auto-linked by taproot link-commits)
 
 ## Tests
 - `src/engine/stack.rs` (inline `#[cfg(test)]`) — covers swap, dup, drop,
