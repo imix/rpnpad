@@ -59,6 +59,12 @@ stacked values and control the numeric modes that govern their computation.
 - **[switch-numeric-mode](./mathematical-operations/switch-numeric-mode/usecase.md)** `[implemented]` — Actor: User (CLI power user)
   - [tui](./mathematical-operations/switch-numeric-mode/tui/impl.md) `[complete]` (0 commits, 2 tests)
 
+## [physical-quantities](./physical-quantities/intent.md) `[draft]`
+
+**Goal:** Enable users to tag stack values with physical units and convert between compatible units with a single command
+
+_No behaviours yet._
+
 ## [presentation](./presentation/intent.md) `[active]`
 
 **Goal:** Enable users to experience a visually cohesive, professional TUI that
@@ -96,4 +102,4 @@ mistakes at any point, and store intermediate results in named registers.
   - [tui](./state-and-memory/undo-redo/tui/impl.md) `[complete]` (0 commits, 1 test)
 
 ---
-7 intents · 23 behaviours · 23 implementations · 23/23 complete
+8 intents · 23 behaviours · 23 implementations · 23/23 complete
