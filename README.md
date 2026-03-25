@@ -46,8 +46,7 @@ brew install rpncalc
 ### Linux and macOS — curl installer
 
 ```sh
-curl --proto '=https' --tlsv1.2 -LsSf \
-  https://github.com/imix/rpncalc/releases/latest/download/rpncalc-installer.sh | sh
+curl -fsSL https://github.com/imix/rpncalc/releases/latest/download/rpncalc-installer.sh | sh
 ```
 
 The installer places `rpncalc` in `~/.cargo/bin/`. If that directory is not on your `PATH`, add this line to your shell profile (`.bashrc`, `.zshrc`, etc.):
