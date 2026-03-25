@@ -43,7 +43,7 @@ calculator state.
 - **[install-via-homebrew](./distribution/install-via-homebrew/usecase.md)** `[implemented]` — Actor: CLI power user (macOS)
   - [homebrew-formula](./distribution/install-via-homebrew/homebrew-formula/impl.md) `[complete]` (2 commits, 5 tests)
 - **[install-via-snap](./distribution/install-via-snap/usecase.md)** `[implemented]` — Actor: CLI power user (Ubuntu, Fedora, Debian, or any Linux distro with snapd installed)
-  - [snapcraft](./distribution/install-via-snap/snapcraft/impl.md) `[complete]` (8 commits ⚠ no tests)
+  - [snapcraft](./distribution/install-via-snap/snapcraft/impl.md) `[complete]` (10 commits ⚠ no tests)
 - **[project-readme](./distribution/project-readme/usecase.md)** `[implemented]` — Actor: Prospective user or new user (any platform, no rpnpad installed yet)
   - [readme](./distribution/project-readme/readme/impl.md) `[complete]` (2 commits ⚠ no tests)
 
