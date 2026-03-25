@@ -47,10 +47,26 @@ impl CalcValue {
         }
     }
 
-    /// Display with notation mode (Fixed/Sci/Auto). Integers are unaffected by notation.
+    /// Display with notation mode (Fixed/Sci/Auto).
+    /// Integers follow Sci/Auto rules using natural exact representation; precision is not applied.
     pub fn display_with_notation(&self, base: Base, precision: usize, notation: Notation) -> String {
         match self {
-            CalcValue::Integer(_) => self.display_with_base(base),
+            CalcValue::Integer(n) => {
+                let use_sci = match notation {
+                    Notation::Fixed => false,
+                    Notation::Sci => true,
+                    Notation::Auto => {
+                        let abs = n.to_string().parse::<f64>().unwrap_or(0.0).abs();
+                        abs >= 1e10
+                    }
+                };
+                if use_sci {
+                    let val = n.to_string().parse::<f64>().unwrap_or(0.0);
+                    format_integer_sci(val)
+                } else {
+                    self.display_with_base(base)
+                }
+            }
             CalcValue::Float(f) => format_fbig_notation(f, precision, notation),
         }
     }
@@ -161,6 +177,24 @@ pub(crate) fn format_fbig_prec(f: &FBig, precision: usize) -> String {
     }
 }
 
+/// Format an integer value in scientific notation using natural exact representation.
+/// e.g. 100 → "1e2", 1234 → "1.234e3", 2 → "2e0". Precision is not applied.
+pub(crate) fn format_integer_sci(val: f64) -> String {
+    let s = format!("{:e}", val);
+    if let Some(e_pos) = s.find('e') {
+        let mantissa = &s[..e_pos];
+        let exponent = &s[e_pos + 1..];
+        let trimmed = if mantissa.contains('.') {
+            mantissa.trim_end_matches('0').trim_end_matches('.').to_string()
+        } else {
+            mantissa.to_string()
+        };
+        format!("{}e{}", trimmed, exponent.trim_start_matches('+'))
+    } else {
+        s
+    }
+}
+
 pub(crate) fn format_fbig_notation(f: &FBig, precision: usize, notation: Notation) -> String {
     let val = f.to_f64().value();
     if val.is_nan() || val.is_infinite() {
@@ -266,6 +300,46 @@ mod tests {
         let s15 = val.display_with_precision(Base::Dec, 15);
         assert_eq!(s5, "42");
         assert_eq!(s15, "42");
+    }
+
+    // ── AC-3: integer sci notation ───────────────────────────────────────────
+
+    #[test]
+    fn test_integer_sci_100() {
+        let val = CalcValue::Integer(IBig::from(100));
+        assert_eq!(val.display_with_notation(Base::Dec, 15, Notation::Sci), "1e2");
+    }
+
+    #[test]
+    fn test_integer_sci_2() {
+        let val = CalcValue::Integer(IBig::from(2));
+        assert_eq!(val.display_with_notation(Base::Dec, 15, Notation::Sci), "2e0");
+    }
+
+    #[test]
+    fn test_integer_sci_1234() {
+        let val = CalcValue::Integer(IBig::from(1234));
+        assert_eq!(val.display_with_notation(Base::Dec, 15, Notation::Sci), "1.234e3");
+    }
+
+    #[test]
+    fn test_integer_fixed_unaffected() {
+        let val = CalcValue::Integer(IBig::from(100));
+        assert_eq!(val.display_with_notation(Base::Dec, 15, Notation::Fixed), "100");
+    }
+
+    // ── AC-16: auto threshold for integers ──────────────────────────────────
+
+    #[test]
+    fn test_integer_auto_above_threshold() {
+        let val = CalcValue::Integer(IBig::from(10_000_000_000i64));
+        assert_eq!(val.display_with_notation(Base::Dec, 15, Notation::Auto), "1e10");
+    }
+
+    #[test]
+    fn test_integer_auto_below_threshold() {
+        let val = CalcValue::Integer(IBig::from(100));
+        assert_eq!(val.display_with_notation(Base::Dec, 15, Notation::Auto), "100");
     }
 
     #[test]

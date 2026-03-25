@@ -40,9 +40,12 @@
 - `src/config/config.rs` — notation config.toml key parsed correctly
 
 ## Status
-- **State:** in-progress
+- **State:** complete
 - **Created:** 2026-03-25
 - **Last verified:** 2026-03-25
 
 ## Notes
 None
+
+## DoD Resolutions
+- condition: document-current | note: README key reference unchanged — integer sci notation is a display fix, not a new user-facing feature or key binding | resolved: 2026-03-25T21:46:30.189Z
