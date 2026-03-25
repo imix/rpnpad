@@ -9,6 +9,7 @@
 - crates.io publishing is disabled (`publish = false`) — can be opted in by setting `publish = ["crates-io"]` in `[workspace.metadata.dist]`.
 - `fail-fast: true` on the build matrix — all target platforms must succeed for a release to be created, satisfying AC-6 fail-fast semantics.
 - Workflow pins cargo-dist at `v0.22.1` via the shell installer — pinning avoids unexpected breakage from upstream changes; bump the version string to upgrade.
+- Linux runners use `ubuntu-latest` — `ubuntu-20.04` reached end-of-life April 2025 and was retired from GitHub Actions hosted runners.
 - The workflow uses `actions/checkout@v4`, `actions/upload-artifact@v4`, and `actions/download-artifact@v4` — current stable major versions.
 - GitHub Release is created as a draft first, then published after all assets are uploaded — prevents users from seeing an incomplete release.
 
@@ -36,4 +37,4 @@ This is a CI/CD pipeline configuration. All ACs are integration tests verified a
 ## Status
 - **State:** complete
 - **Created:** 2026-03-24
-- **Last verified:** 2026-03-24
+- **Last verified:** 2026-03-25
