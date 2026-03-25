@@ -1,0 +1,16 @@
+# Maintainer: imix <imix@github>
+pkgname=rpncalc-bin
+pkgver=0.2.2
+pkgrel=1
+pkgdesc="An HP48-style RPN calculator for the terminal"
+arch=('x86_64')
+url="https://github.com/imix/rpncalc"
+license=('MIT')
+provides=('rpncalc')
+conflicts=('rpncalc')
+source_x86_64=("rpncalc-${pkgver}-x86_64.tar.gz::https://github.com/imix/rpncalc/releases/download/v${pkgver}/rpncalc-x86_64-unknown-linux-gnu.tar.gz")
+sha256sums_x86_64=('SKIP')
+
+package() {
+    install -Dm755 "${srcdir}/rpncalc" "${pkgdir}/usr/bin/rpncalc"
+}

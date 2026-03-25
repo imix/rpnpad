@@ -31,7 +31,7 @@ This is a packaging configuration. Integration tests require an Arch Linux envir
 ## DoR Resolutions
 
 ## Status
-- **State:** in-progress
+- **State:** complete
 - **Created:** 2026-03-25
 - **Last verified:** 2026-03-25
 

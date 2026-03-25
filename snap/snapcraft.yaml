@@ -1,0 +1,36 @@
+name: rpncalc
+base: core22
+adopt-info: rpncalc
+summary: HP48-style RPN calculator for the terminal
+description: |
+  rpncalc is an HP48-style Reverse Polish Notation calculator for the
+  terminal. Features include:
+
+  - Arbitrary-precision arithmetic
+  - Stack-based RPN input
+  - Trigonometric, logarithmic, and mathematical functions via chord keys
+  - Multiple numeric bases (decimal, hex, octal, binary)
+  - Scientific and fixed notation modes
+  - Named registers and session persistence
+  - Context-sensitive hints pane
+
+grade: stable
+confinement: classic
+
+apps:
+  rpncalc:
+    command: bin/rpncalc
+
+parts:
+  rpncalc:
+    plugin: rust
+    source: .
+    build-packages:
+      - pkg-config
+      - libxcb1-dev
+      - libxcb-render0-dev
+      - libxcb-shape0-dev
+      - libxcb-xfixes0-dev
+    override-pull: |
+      craftenv pull
+      craftenv set-version "$(grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)".*/\1/')"
