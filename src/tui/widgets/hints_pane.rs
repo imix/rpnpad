@@ -25,14 +25,15 @@ const ARITHMETIC: &[(&str, &str)] = &[
 
 const STACK_OPS: &[(&str, &str)] = &[
     ("s", "swap"),
-    ("d", "drop"),
+    ("Bksp", "drop"),
     ("p", "dup"),
     ("R", "rot"),
     ("u", "undo"),
     ("y", "yank"),
     ("S", "store"),
-    ("Q", "quit"),
 ];
+
+const SESSION_OPS: &[(&str, &str)] = &[("Q", "quit")];
 
 const TRIG_OPS: &[(&str, &str)] = &[
     ("s", "sin"),
@@ -178,8 +179,9 @@ pub fn render(f: &mut Frame, area: Rect, mode: &AppMode, state: &CalcState) {
             Line::raw("^  pow    !  fact"),
             Line::raw("%  mod    n  neg"),
             Line::raw("q  x²    w  √"),
-            Line::raw("s  swap   d  drop"),
-            Line::raw("p  dup    r  rot"),
+            Line::raw("s  swap   Bksp drop"),
+            Line::raw("p  dup    R  rot"),
+            Line::raw(""),
             Line::raw("Q  quit"),
         ];
         f.render_widget(Paragraph::new(lines), area);
@@ -253,6 +255,10 @@ pub fn render(f: &mut Frame, area: Rect, mode: &AppMode, state: &CalcState) {
     } else {
         lines.extend(chord_leaders_to_lines(CHORD_LEADERS));
     }
+
+    lines.push(Line::raw(""));
+    lines.push(Line::styled("SESSION", dim));
+    lines.extend(entries_to_lines(SESSION_OPS));
 
     if !state.registers.is_empty() {
         lines.push(Line::raw(""));
@@ -698,13 +704,28 @@ mod tests {
         assert!(content.contains("round"), "r› chord leader should show 'round' at depth≥1");
     }
 
-    // AC-10: Q  quit appears in Normal STACK hints
+    // AC-10: Q quit appears in Normal mode hints (now in SESSION section)
     #[test]
     fn test_normal_mode_shows_quit_hint() {
-        let buf = render_hints(AppMode::Normal, CalcState::new(), 40, 20);
+        let buf = render_hints(AppMode::Normal, CalcState::new(), 40, 25);
         let content = full_content(&buf);
         assert!(content.contains('Q'), "Q key should appear in normal mode hints");
         assert!(content.contains("quit"), "quit label should appear in normal mode hints");
+    }
+
+    // AC-5: Q quit is in SESSION section, not grouped with STACK operations
+    #[test]
+    fn test_quit_in_session_section_not_stack() {
+        let buf = render_hints(AppMode::Normal, CalcState::new(), 40, 25);
+        let content = full_content(&buf);
+        assert!(content.contains("SESSION"), "SESSION section should appear in normal mode");
+        // SESSION must appear after STACK in the rendered output
+        let stack_pos = content.find("STACK").expect("STACK section must exist");
+        let session_pos = content.find("SESSION").expect("SESSION section must exist");
+        assert!(
+            session_pos > stack_pos,
+            "SESSION section should appear after STACK section"
+        );
     }
 
     // Rounding chord submenu renders with [ROUND] header

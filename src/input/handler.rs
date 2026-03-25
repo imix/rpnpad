@@ -26,7 +26,7 @@ pub fn handle_key(mode: &AppMode, event: KeyEvent) -> Action {
             KeyCode::Char('%') => Action::Execute(Op::Mod),
             KeyCode::Char('!') => Action::Execute(Op::Factorial),
             KeyCode::Char('s') => Action::Execute(Op::Swap),
-            KeyCode::Char('d') => Action::Execute(Op::Drop),
+            KeyCode::Char('d') => Action::Noop,
             KeyCode::Char('p') => Action::Execute(Op::Dup),
             KeyCode::Char('R') => Action::Execute(Op::Rotate),
             KeyCode::Char('r') => Action::EnterChordMode(ChordCategory::Rounding),
@@ -465,7 +465,6 @@ mod tests {
             ('%', Action::Execute(Op::Mod)),
             ('!', Action::Execute(Op::Factorial)),
             ('s', Action::Execute(Op::Swap)),
-            ('d', Action::Execute(Op::Drop)),
             ('p', Action::Execute(Op::Dup)),
             ('R', Action::Execute(Op::Rotate)),
             ('n', Action::Execute(Op::Negate)),
@@ -479,6 +478,15 @@ mod tests {
                 expected
             );
         }
+    }
+
+    // AC-8: d in Normal → Noop (use Backspace to drop)
+    #[test]
+    fn test_normal_d_is_noop() {
+        assert_eq!(
+            handle_key(&AppMode::Normal, key(KeyCode::Char('d'))),
+            Action::Noop
+        );
     }
 
     // Undo and Ctrl-R redo

@@ -4,23 +4,24 @@
 ../usecase.md
 
 ## Design Decisions
-- All five ops map to single-key normal-mode bindings: `s`=swap, `p`=dup,
-  `d`=drop, `r`=rotate, Enter-with-empty-buffer=dup (HP48 convention)
-- `Backspace` added as alias for `d` (drop) in Normal mode — muscle memory
-  for users coming from text editors; no conflict because Backspace in Insert
-  mode already deletes the last typed char (different mode, different handler arm)
-- `Delete` added as the key for clear — removes all stack items; no error
-  when stack is already empty (`CalcState::clear()` is a no-op on empty stack)
-- `Op::Clear` already existed in the engine; this change is purely a keybinding
-  addition in handler.rs with no engine or app-layer changes required
+- Ops map to single-key normal-mode bindings: `s`=swap, `p`=dup,
+  `Backspace`=drop, `r`=rotate, Enter-with-empty-buffer=dup (HP48 convention)
+- `Backspace` is the sole drop key in Normal mode — muscle memory for users
+  coming from text editors; `d` is now Noop (freed for future use)
+- `Delete` is the key for clear — removes all stack items; no error when
+  stack is already empty (`CalcState::clear()` is a no-op on empty stack)
+- `Op::Clear` already existed in the engine; keybindings are purely in handler.rs
+  with no engine or app-layer changes required
 - All ops return `Result<>` — underflow surfaces as `CalcError::StackUnderflow`
   which the app layer renders to the ErrorLine
 
 ## Source Files
 - `src/engine/stack.rs` — CalcState: swap(), dup(), drop(),
   rotate(), clear() — all transactional, return Result
-- `src/input/handler.rs` — handle_key(): maps s/p/d/r/Enter
-  to Action::Execute(Op::*)
+- `src/input/handler.rs` — handle_key(): maps s/p/Backspace/r/Enter/Delete
+  to Action::Execute(Op::*); d → Noop
+- `src/tui/widgets/hints_pane.rs` — STACK_OPS and Insert mode hints updated
+  to show Backspace for drop instead of d
 - `src/engine/ops.rs` — Op enum variants and dispatch
 
 ## Commits
@@ -31,6 +32,8 @@
 ## Tests
 - `src/engine/stack.rs` (inline `#[cfg(test)]`) — covers swap, dup, drop,
   rotate, clear including underflow cases and deep-stack invariants
+- `src/input/handler.rs` — AC-6 (Backspace→Drop), AC-7 (Delete→Clear),
+  AC-8 (d→Noop); all Normal-mode op key assertions
 
 ## Status
 - **State:** complete
