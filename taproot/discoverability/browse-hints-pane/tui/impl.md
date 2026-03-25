@@ -25,8 +25,8 @@
 - 7066c63 feat: complete Epics 2–4 + layout width cap
 
 ## Tests
-- No dedicated unit tests for hints pane rendering (ratatui widgets are
-  typically verified by integration/visual inspection)
+- `src/tui/widgets/hints_pane.rs` — AC-1: `test_depth0_shows_constants_leader`, `test_depth0_shows_stack_ops`; AC-2: `test_depth2_shows_full_arithmetic`, `test_normal_mode_shows_add_op`; AC-3: `test_registers_shows_section_header`, `test_registers_shows_register_name`, `test_registers_shows_recall_command`
+- `src/tui/layout.rs` — AC-4: `test_narrow_terminal_hides_hints` (width<60 collapses pane), `test_wide_terminal_shows_hints`, `test_medium_terminal_shows_hints`
 
 ## Status
 - **State:** complete
