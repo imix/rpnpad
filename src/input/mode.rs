@@ -9,6 +9,7 @@ pub enum ChordCategory {
     Base,
     HexStyle,
     Rounding,
+    Config,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -22,4 +23,6 @@ pub enum AppMode {
     /// Cursor-based stack navigation. The `usize` is the 1-indexed cursor
     /// position from the top (always ≥ 2; position 1 is the top itself).
     Browse(usize),
+    /// Precision entry sub-mode. Buffer accumulates up to 2 digit chars.
+    PrecisionInput(String),
 }

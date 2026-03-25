@@ -2,6 +2,7 @@ pub mod angle;
 pub mod base;
 pub mod constants;
 pub mod error;
+pub mod notation;
 pub mod ops;
 pub mod registers;
 pub mod stack;

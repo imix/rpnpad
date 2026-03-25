@@ -1,6 +1,7 @@
 use crate::engine::angle::AngleMode;
 use crate::engine::base::{Base, HexStyle};
 use crate::engine::error::CalcError;
+use crate::engine::notation::Notation;
 use crate::engine::value::CalcValue;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -12,6 +13,14 @@ pub struct CalcState {
     pub angle_mode: AngleMode,
     pub base: Base,
     pub hex_style: HexStyle,
+    #[serde(default)]
+    pub notation: Notation,
+    #[serde(default = "default_precision")]
+    pub precision: usize,
+}
+
+fn default_precision() -> usize {
+    15
 }
 
 impl CalcState {
@@ -22,6 +31,8 @@ impl CalcState {
             angle_mode: AngleMode::Deg,
             base: Base::Dec,
             hex_style: HexStyle::ZeroX,
+            notation: Notation::Fixed,
+            precision: 15,
         }
     }
 

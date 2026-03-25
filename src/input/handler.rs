@@ -2,6 +2,7 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 use crate::engine::angle::AngleMode;
 use crate::engine::base::{Base, HexStyle};
+use crate::engine::notation::Notation;
 use crate::engine::ops::Op;
 use crate::input::{
     action::Action,
@@ -36,9 +37,10 @@ pub fn handle_key(mode: &AppMode, event: KeyEvent) -> Action {
             KeyCode::Char('l') => Action::EnterChordMode(ChordCategory::Log),
             KeyCode::Char('f') => Action::EnterChordMode(ChordCategory::Functions),
             KeyCode::Char('c') => Action::EnterChordMode(ChordCategory::Constants),
-            KeyCode::Char('m') => Action::EnterChordMode(ChordCategory::AngleMode),
-            KeyCode::Char('x') => Action::EnterChordMode(ChordCategory::Base),
-            KeyCode::Char('X') => Action::EnterChordMode(ChordCategory::HexStyle),
+            KeyCode::Char('C') => Action::EnterChordMode(ChordCategory::Config),
+            KeyCode::Char('m') => Action::Noop,
+            KeyCode::Char('x') => Action::Noop,
+            KeyCode::Char('X') => Action::Noop,
             KeyCode::Char('S') => Action::EnterStoreMode,
             KeyCode::Up => Action::EnterBrowseMode,
             KeyCode::Enter => Action::Execute(Op::Dup),
@@ -91,6 +93,13 @@ pub fn handle_key(mode: &AppMode, event: KeyEvent) -> Action {
             KeyCode::Down => Action::BrowseCursorDown,
             KeyCode::Enter => Action::BrowseConfirm,
             KeyCode::Esc => Action::BrowseCancel,
+            _ => Action::Noop,
+        },
+        AppMode::PrecisionInput(_) => match event.code {
+            KeyCode::Enter => Action::PrecisionSubmit,
+            KeyCode::Esc => Action::PrecisionCancel,
+            KeyCode::Backspace => Action::PrecisionBackspace,
+            KeyCode::Char(c) if c.is_ascii_digit() => Action::PrecisionDigit(c),
             _ => Action::Noop,
         },
     }
@@ -166,6 +175,7 @@ fn chord_leader_char(category: &ChordCategory) -> char {
         ChordCategory::Base => 'x',
         ChordCategory::HexStyle => 'X',
         ChordCategory::Rounding => 'r',
+        ChordCategory::Config => 'C',
     }
 }
 
@@ -226,6 +236,24 @@ fn chord_op_label(category: &ChordCategory, c: char) -> Option<&'static str> {
             't' => Some("trunc"),
             'r' => Some("round"),
             's' => Some("sign"),
+            _ => None,
+        },
+        ChordCategory::Config => match c {
+            'd' => Some("deg"),
+            'r' => Some("rad"),
+            'g' => Some("grad"),
+            'c' => Some("dec"),
+            'h' => Some("hex"),
+            'o' => Some("oct"),
+            'b' => Some("bin"),
+            'f' => Some("fixed"),
+            's' => Some("sci"),
+            'a' => Some("auto"),
+            'p' => Some("prec"),
+            '1' => Some("0xFF"),
+            '2' => Some("$FF"),
+            '3' => Some("#FF"),
+            '4' => Some("FFh"),
             _ => None,
         },
     }
@@ -328,6 +356,24 @@ fn dispatch_chord_key(category: &ChordCategory, c: char) -> Action {
             't' => Action::Execute(Op::Trunc),
             'r' => Action::Execute(Op::Round),
             's' => Action::Execute(Op::Sign),
+            _ => Action::ChordInvalid,
+        },
+        ChordCategory::Config => match c {
+            'd' => Action::SetAngleMode(AngleMode::Deg),
+            'r' => Action::SetAngleMode(AngleMode::Rad),
+            'g' => Action::SetAngleMode(AngleMode::Grad),
+            'c' => Action::SetBase(Base::Dec),
+            'h' => Action::SetBase(Base::Hex),
+            'o' => Action::SetBase(Base::Oct),
+            'b' => Action::SetBase(Base::Bin),
+            'f' => Action::SetNotation(Notation::Fixed),
+            's' => Action::SetNotation(Notation::Sci),
+            'a' => Action::SetNotation(Notation::Auto),
+            'p' => Action::EnterPrecisionInput,
+            '1' => Action::SetHexStyle(HexStyle::ZeroX),
+            '2' => Action::SetHexStyle(HexStyle::Dollar),
+            '3' => Action::SetHexStyle(HexStyle::Hash),
+            '4' => Action::SetHexStyle(HexStyle::Suffix),
             _ => Action::ChordInvalid,
         },
     }
@@ -452,7 +498,7 @@ mod tests {
         );
     }
 
-    // AC 1: All 7 chord leader keys in Normal mode
+    // AC 1: chord leader keys in Normal mode
     #[test]
     fn test_normal_chord_leaders() {
         let cases = [
@@ -460,9 +506,7 @@ mod tests {
             ('l', Action::EnterChordMode(ChordCategory::Log)),
             ('f', Action::EnterChordMode(ChordCategory::Functions)),
             ('c', Action::EnterChordMode(ChordCategory::Constants)),
-            ('m', Action::EnterChordMode(ChordCategory::AngleMode)),
-            ('x', Action::EnterChordMode(ChordCategory::Base)),
-            ('X', Action::EnterChordMode(ChordCategory::HexStyle)),
+            ('C', Action::EnterChordMode(ChordCategory::Config)),
         ];
         for (c, expected) in &cases {
             assert_eq!(
@@ -471,6 +515,15 @@ mod tests {
                 "key '{}' should produce {:?}",
                 c,
                 expected
+            );
+        }
+        // m, x, X are now Noop (removed in favour of C› config chord)
+        for c in ['m', 'x', 'X'] {
+            assert_eq!(
+                handle_key(&AppMode::Normal, key(KeyCode::Char(c))),
+                Action::Noop,
+                "key '{}' should be Noop after config chord rebinding",
+                c
             );
         }
     }
@@ -1110,5 +1163,118 @@ mod tests {
     fn test_command_label_invalid_chord_none() {
         let label = command_label(&AppMode::Chord(ChordCategory::Rounding), key(KeyCode::Char('z')));
         assert_eq!(label, None);
+    }
+
+    // ── configure-settings-chord handler tests ──────────────────────────────
+
+    // C in Normal → EnterChordMode(Config)
+    #[test]
+    fn test_normal_c_enters_config_chord() {
+        assert_eq!(
+            handle_key(&AppMode::Normal, key(KeyCode::Char('C'))),
+            Action::EnterChordMode(ChordCategory::Config)
+        );
+    }
+
+    // Config chord angle mode keys
+    #[test]
+    fn test_config_chord_angle_keys() {
+        let cases = [
+            ('d', Action::SetAngleMode(AngleMode::Deg)),
+            ('r', Action::SetAngleMode(AngleMode::Rad)),
+            ('g', Action::SetAngleMode(AngleMode::Grad)),
+        ];
+        for (c, expected) in &cases {
+            assert_eq!(
+                handle_key(&AppMode::Chord(ChordCategory::Config), key(KeyCode::Char(*c))),
+                *expected,
+                "config chord '{}' should set angle mode",
+                c
+            );
+        }
+    }
+
+    // Config chord base keys
+    #[test]
+    fn test_config_chord_base_keys() {
+        let cases = [
+            ('c', Action::SetBase(Base::Dec)),
+            ('h', Action::SetBase(Base::Hex)),
+            ('o', Action::SetBase(Base::Oct)),
+            ('b', Action::SetBase(Base::Bin)),
+        ];
+        for (c, expected) in &cases {
+            assert_eq!(
+                handle_key(&AppMode::Chord(ChordCategory::Config), key(KeyCode::Char(*c))),
+                *expected,
+                "config chord '{}' should set base",
+                c
+            );
+        }
+    }
+
+    // Config chord notation keys
+    #[test]
+    fn test_config_chord_notation_keys() {
+        let cases = [
+            ('f', Action::SetNotation(Notation::Fixed)),
+            ('s', Action::SetNotation(Notation::Sci)),
+            ('a', Action::SetNotation(Notation::Auto)),
+        ];
+        for (c, expected) in &cases {
+            assert_eq!(
+                handle_key(&AppMode::Chord(ChordCategory::Config), key(KeyCode::Char(*c))),
+                *expected,
+                "config chord '{}' should set notation",
+                c
+            );
+        }
+    }
+
+    // Config chord 'p' → EnterPrecisionInput
+    #[test]
+    fn test_config_chord_p_enters_precision() {
+        assert_eq!(
+            handle_key(&AppMode::Chord(ChordCategory::Config), key(KeyCode::Char('p'))),
+            Action::EnterPrecisionInput
+        );
+    }
+
+    // Config chord hex style keys (1–4)
+    #[test]
+    fn test_config_chord_hex_style_keys() {
+        let cases = [
+            ('1', Action::SetHexStyle(HexStyle::ZeroX)),
+            ('2', Action::SetHexStyle(HexStyle::Dollar)),
+            ('3', Action::SetHexStyle(HexStyle::Hash)),
+            ('4', Action::SetHexStyle(HexStyle::Suffix)),
+        ];
+        for (c, expected) in &cases {
+            assert_eq!(
+                handle_key(&AppMode::Chord(ChordCategory::Config), key(KeyCode::Char(*c))),
+                *expected,
+                "config chord '{}' should set hex style",
+                c
+            );
+        }
+    }
+
+    // PrecisionInput mode: digits → PrecisionDigit, Enter → Submit, Esc → Cancel, Backspace → Backspace
+    #[test]
+    fn test_precision_input_mode_keys() {
+        let mode = AppMode::PrecisionInput(String::new());
+        assert_eq!(handle_key(&mode, key(KeyCode::Char('5'))), Action::PrecisionDigit('5'));
+        assert_eq!(handle_key(&mode, key(KeyCode::Enter)), Action::PrecisionSubmit);
+        assert_eq!(handle_key(&mode, key(KeyCode::Esc)), Action::PrecisionCancel);
+        assert_eq!(handle_key(&mode, key(KeyCode::Backspace)), Action::PrecisionBackspace);
+        // non-digit chars are Noop in PrecisionInput
+        assert_eq!(handle_key(&mode, key(KeyCode::Char('a'))), Action::Noop);
+    }
+
+    // command_label for Config chord
+    #[test]
+    fn test_command_label_config_chord() {
+        let label = command_label(&AppMode::Chord(ChordCategory::Config), key(KeyCode::Char('s')));
+        assert_eq!(label.as_deref(), Some("Cs → sci"));
     }
 }

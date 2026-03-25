@@ -6,6 +6,7 @@ use ratatui::{
     Frame,
 };
 
+use crate::engine::base::Base;
 use crate::engine::stack::CalcState;
 use crate::input::mode::{AppMode, ChordCategory};
 
@@ -68,15 +69,12 @@ const CHORD_LEADERS: &[(&str, &str)] = &[
     ("f", "√"),
     ("r", "round"),
     ("c", "const"),
-    ("m", "mode"),
-    ("x", "base"),
-    ("X", "hex"),
+    ("C", "config"),
 ];
 
 const UNARY_OPS: &[(&str, &str)] = &[("!", "fact"), ("n", "neg"), ("q", "x²"), ("w", "√")];
 
-const CHORD_LEADERS_DEPTH0: &[(&str, &str)] =
-    &[("c", "const"), ("m", "mode"), ("x", "base"), ("X", "hex")];
+const CHORD_LEADERS_DEPTH0: &[(&str, &str)] = &[("c", "const"), ("C", "config")];
 
 fn entries_to_lines(entries: &[(&str, &str)]) -> Vec<Line<'static>> {
     entries
@@ -144,6 +142,18 @@ pub fn render(f: &mut Frame, area: Rect, mode: &AppMode, state: &CalcState) {
         return;
     }
 
+    if matches!(mode, AppMode::PrecisionInput(_)) {
+        let lines = vec![
+            Line::styled("PRECISION", dim),
+            Line::raw(""),
+            Line::raw("Enter  confirm (1–15)"),
+            Line::raw("Esc    cancel"),
+            Line::raw("Bksp   delete"),
+        ];
+        f.render_widget(Paragraph::new(lines), area);
+        return;
+    }
+
     if matches!(mode, AppMode::Browse(_)) {
         let lines = vec![
             Line::styled("BROWSE", dim),
@@ -189,6 +199,21 @@ pub fn render(f: &mut Frame, area: Rect, mode: &AppMode, state: &CalcState) {
     }
 
     if let AppMode::Chord(category) = mode {
+        if matches!(category, ChordCategory::Config) {
+            let mut lines: Vec<Line<'static>> = vec![
+                Line::styled("[CONFIG]", dim),
+                Line::raw(""),
+                Line::raw("ANGLE  d deg  r rad  g grad"),
+                Line::raw("BASE   c dec  h hex  o oct  b bin"),
+                Line::raw("NOTE   f fix  s sci  a auto"),
+                Line::raw("PREC   p set"),
+            ];
+            if state.base == Base::Hex {
+                lines.push(Line::raw("HEX    1 0xFF 2 $FF 3 #FF 4 FFh"));
+            }
+            f.render_widget(Paragraph::new(lines), area);
+            return;
+        }
         let (header, ops): (&str, &[(&str, &str)]) = match category {
             ChordCategory::Trig => ("[TRIG]", TRIG_OPS),
             ChordCategory::Log => ("[LOG]", LOG_OPS),
@@ -198,6 +223,7 @@ pub fn render(f: &mut Frame, area: Rect, mode: &AppMode, state: &CalcState) {
             ChordCategory::Base => ("[BASE]", BASE_OPS),
             ChordCategory::HexStyle => ("[HEX]", HEX_STYLE_OPS),
             ChordCategory::Rounding => ("[ROUND]", ROUNDING_OPS),
+            ChordCategory::Config => unreachable!("handled above"),
         };
         let mut lines: Vec<Line<'static>> = vec![Line::styled(header, dim)];
         lines.extend(entries_to_lines(ops));
@@ -725,5 +751,68 @@ mod tests {
         let buf = render_hints(AppMode::AlphaStore(String::new()), s, 40, 15);
         let content = full_content(&buf);
         assert!(!content.contains("REGISTERS"));
+    }
+
+    // ── configure-settings-chord AC-13 ─────────────────────────────────────
+
+    // AC-13: Config chord shows [CONFIG] header
+    #[test]
+    fn test_config_chord_shows_header() {
+        let buf = render_hints(AppMode::Chord(ChordCategory::Config), CalcState::new(), 40, 15);
+        let content = full_content(&buf);
+        assert!(content.contains("[CONFIG]"), "Config chord should show [CONFIG]: {:?}", content);
+    }
+
+    // AC-13: Config chord shows ANGLE, BASE, NOTE, PREC sections
+    #[test]
+    fn test_config_chord_shows_all_categories() {
+        let buf = render_hints(AppMode::Chord(ChordCategory::Config), CalcState::new(), 40, 15);
+        let content = full_content(&buf);
+        assert!(content.contains("ANGLE"), "should show ANGLE: {:?}", content);
+        assert!(content.contains("BASE"), "should show BASE: {:?}", content);
+        assert!(content.contains("NOTE"), "should show NOTE: {:?}", content);
+        assert!(content.contains("PREC"), "should show PREC: {:?}", content);
+    }
+
+    // AC-13: Config chord HEX STYLE only shown when base=HEX
+    #[test]
+    fn test_config_chord_hex_style_shown_only_in_hex() {
+        // non-HEX: no HEX section
+        let buf = render_hints(AppMode::Chord(ChordCategory::Config), CalcState::new(), 40, 15);
+        let content = full_content(&buf);
+        assert!(!content.contains("HEX"), "HEX section should be hidden when base is not HEX: {:?}", content);
+
+        // HEX base: HEX section visible
+        let mut s = CalcState::new();
+        s.base = crate::engine::base::Base::Hex;
+        let buf = render_hints(AppMode::Chord(ChordCategory::Config), s, 40, 15);
+        let content = full_content(&buf);
+        assert!(content.contains("HEX"), "HEX section should appear when base is HEX: {:?}", content);
+    }
+
+    // AC-13: C› config chord leader shown in Normal mode hints
+    #[test]
+    fn test_normal_mode_shows_config_chord_leader() {
+        let buf = render_hints(AppMode::Normal, CalcState::new(), 40, 20);
+        let content = full_content(&buf);
+        assert!(content.contains('C'), "C› chord leader should appear in normal mode hints");
+        assert!(content.contains("config"), "config label should appear");
+    }
+
+    // AC-12: m and x no longer appear as chord leaders in Normal mode hints
+    #[test]
+    fn test_normal_mode_no_m_x_chord_leaders() {
+        let buf = render_hints(AppMode::Normal, CalcState::new(), 40, 20);
+        let content = full_content(&buf);
+        assert!(!content.contains("m›"), "m› should be removed from hints");
+        assert!(!content.contains("x›"), "x› should be removed from hints");
+    }
+
+    // PrecisionInput mode shows PRECISION hint
+    #[test]
+    fn test_precision_input_mode_shows_hint() {
+        let buf = render_hints(AppMode::PrecisionInput(String::new()), CalcState::new(), 40, 10);
+        let content = full_content(&buf);
+        assert!(content.contains("PRECISION"), "PRECISION mode should show hint: {:?}", content);
     }
 }

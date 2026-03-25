@@ -40,7 +40,7 @@
 - `src/config/config.rs` — notation config.toml key parsed correctly
 
 ## Status
-- **State:** in-progress
+- **State:** complete
 - **Created:** 2026-03-25
 - **Last verified:** 2026-03-25
 

@@ -58,10 +58,10 @@ pub fn render(f: &mut Frame, app: &App) {
     };
 
     if width < 60 {
-        stack_pane::render(f, outer[0], &app.state, app.precision, browse_cursor);
+        stack_pane::render(f, outer[0], &app.state, browse_cursor);
     } else {
         let inner = Layout::horizontal([Percentage(50), Percentage(50)]).split(outer[0]);
-        stack_pane::render(f, inner[0], &app.state, app.precision, browse_cursor);
+        stack_pane::render(f, inner[0], &app.state, browse_cursor);
         hints_pane::render(f, inner[1], &app.mode, &app.state);
     }
 

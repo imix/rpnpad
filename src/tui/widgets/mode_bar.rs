@@ -8,6 +8,7 @@ use ratatui::{
 
 use crate::engine::{
     base::{Base, HexStyle},
+    notation::Notation,
     stack::CalcState,
 };
 use crate::input::mode::AppMode;
@@ -24,6 +25,13 @@ pub fn render(
         AppMode::Insert(_) | AppMode::AlphaStore(_) => "[INSERT]",
         AppMode::Alpha(_) => "[ALPHA]",
         AppMode::Browse(_) => "[BROWSE]",
+        AppMode::PrecisionInput(_) => "[PREC]",
+    };
+
+    let notation_str = match state.notation {
+        Notation::Fixed => "",
+        Notation::Sci => "  SCI",
+        Notation::Auto => "  AUTO",
     };
 
     let right_str = if state.base == Base::Hex {
@@ -33,9 +41,9 @@ pub fn render(
             HexStyle::Hash => "#FF",
             HexStyle::Suffix => "FFh",
         };
-        format!("{}  {}  {}", state.angle_mode, state.base, hex_example)
+        format!("{}  {}  {}{}", state.angle_mode, state.base, hex_example, notation_str)
     } else {
-        format!("{}  {}", state.angle_mode, state.base)
+        format!("{}  {}{}", state.angle_mode, state.base, notation_str)
     };
 
     let style = Style::default().fg(Color::Yellow);
@@ -391,6 +399,49 @@ mod tests {
             "settings should be rightmost content: {:?}",
             content
         );
+    }
+
+    // AC-14: mode bar shows SCI notation indicator
+    #[test]
+    fn test_sci_notation_indicator_shown() {
+        use crate::engine::notation::Notation;
+        let mut state = CalcState::new();
+        state.notation = Notation::Sci;
+        let buf = render_mode_bar(&AppMode::Normal, &state, 40);
+        let content = row_content(&buf, 0);
+        assert!(content.contains("SCI"), "SCI notation should appear: {:?}", content);
+    }
+
+    // AC-14: mode bar shows AUTO notation indicator
+    #[test]
+    fn test_auto_notation_indicator_shown() {
+        use crate::engine::notation::Notation;
+        let mut state = CalcState::new();
+        state.notation = Notation::Auto;
+        let buf = render_mode_bar(&AppMode::Normal, &state, 40);
+        let content = row_content(&buf, 0);
+        assert!(content.contains("AUTO"), "AUTO notation should appear: {:?}", content);
+    }
+
+    // AC-14: Fixed notation shows no indicator
+    #[test]
+    fn test_fixed_notation_no_indicator() {
+        use crate::engine::notation::Notation;
+        let mut state = CalcState::new();
+        state.notation = Notation::Fixed;
+        let buf = render_mode_bar(&AppMode::Normal, &state, 40);
+        let content = row_content(&buf, 0);
+        assert!(!content.contains("SCI") && !content.contains("AUTO"),
+            "Fixed notation should show no indicator: {:?}", content);
+    }
+
+    // [PREC] mode label
+    #[test]
+    fn test_prec_mode_shows_prec() {
+        let state = CalcState::new();
+        let buf = render_mode_bar(&AppMode::PrecisionInput(String::new()), &state, 40);
+        let content = row_content(&buf, 0);
+        assert!(content.contains("[PREC]"), "[PREC] mode should show '[PREC]': {:?}", content);
     }
 
     // Error condition: label too wide → omitted entirely, no partial display

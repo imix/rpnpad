@@ -1,4 +1,5 @@
 use crate::engine::base::Base;
+use crate::engine::notation::Notation;
 use dashu::float::FBig;
 use dashu::integer::IBig;
 use serde::{Deserialize, Serialize};
@@ -38,10 +39,19 @@ impl CalcValue {
     }
 
     /// Display with configurable float precision. Integers ignore precision.
+    #[allow(dead_code)]
     pub fn display_with_precision(&self, base: Base, precision: usize) -> String {
         match self {
             CalcValue::Integer(_) => self.display_with_base(base),
             CalcValue::Float(f) => format_fbig_prec(f, precision),
+        }
+    }
+
+    /// Display with notation mode (Fixed/Sci/Auto). Integers are unaffected by notation.
+    pub fn display_with_notation(&self, base: Base, precision: usize, notation: Notation) -> String {
+        match self {
+            CalcValue::Integer(_) => self.display_with_base(base),
+            CalcValue::Float(f) => format_fbig_notation(f, precision, notation),
         }
     }
 
@@ -140,6 +150,41 @@ pub(crate) fn format_fbig_prec(f: &FBig, precision: usize) -> String {
         s.trim_end_matches('0').trim_end_matches('.').to_string()
     } else {
         s
+    }
+}
+
+pub(crate) fn format_fbig_notation(f: &FBig, precision: usize, notation: Notation) -> String {
+    let val = f.to_f64().value();
+    if val.is_nan() || val.is_infinite() {
+        return format!("{}", val);
+    }
+    let use_sci = match notation {
+        Notation::Fixed => false,
+        Notation::Sci => true,
+        Notation::Auto => {
+            let abs = val.abs();
+            abs != 0.0 && (abs >= 1e10 || abs < 1e-4)
+        }
+    };
+    if use_sci {
+        // Format as scientific notation with `precision` significant digits after decimal
+        let s = format!("{:.prec$e}", val, prec = precision);
+        // Rust's {:e} uses 'e' notation like "3.14e0"; trim trailing zeros in mantissa
+        if let Some(e_pos) = s.find('e') {
+            let mantissa = &s[..e_pos];
+            let exponent = &s[e_pos..];
+            let trimmed = if mantissa.contains('.') {
+                let m = mantissa.trim_end_matches('0').trim_end_matches('.');
+                m.to_string()
+            } else {
+                mantissa.to_string()
+            };
+            format!("{}e{}", trimmed, exponent.trim_start_matches('e').trim_start_matches('+'))
+        } else {
+            s
+        }
+    } else {
+        format_fbig_prec(f, precision)
     }
 }
 

@@ -39,7 +39,6 @@ pub struct App {
     pub mode: AppMode,
     pub error_message: Option<String>,
     pub should_quit: bool,
-    pub precision: usize,
     pub last_command: Option<String>,
 }
 
@@ -49,13 +48,14 @@ impl App {
         let mut state = CalcState::new();
         state.angle_mode = config.angle_mode; // config default; overridden by session restore
         state.base = config.base; // config default; overridden by session restore
+        state.precision = config.precision; // config default; overridden by session restore
+        state.notation = config.notation; // config default; overridden by session restore
         Self {
             state,
             undo_history: UndoHistory::with_max_depth(config.max_undo_history),
             mode: AppMode::Normal,
             error_message: None,
             should_quit: false,
-            precision: config.precision,
             last_command: None,
         }
     }
@@ -304,6 +304,43 @@ impl App {
                 self.mode = AppMode::Normal;
                 self.error_message = None;
             }
+            Action::EnterPrecisionInput => {
+                self.mode = AppMode::PrecisionInput(String::new());
+                self.error_message = None;
+            }
+            Action::PrecisionDigit(c) => {
+                if let AppMode::PrecisionInput(buf) = &mut self.mode {
+                    if buf.len() < 2 {
+                        buf.push(c);
+                    }
+                }
+            }
+            Action::PrecisionBackspace => {
+                if let AppMode::PrecisionInput(buf) = &mut self.mode {
+                    buf.pop();
+                }
+            }
+            Action::PrecisionSubmit => {
+                let mode = std::mem::replace(&mut self.mode, AppMode::Normal);
+                if let AppMode::PrecisionInput(buf) = mode {
+                    if !buf.is_empty() {
+                        match buf.parse::<usize>() {
+                            Ok(p) if p >= 1 && p <= 15 => {
+                                self.state.precision = p;
+                                self.error_message = None;
+                            }
+                            _ => {
+                                self.error_message =
+                                    Some(format!("Precision must be 1–15, got '{}'", buf));
+                            }
+                        }
+                    }
+                }
+            }
+            Action::PrecisionCancel => {
+                self.mode = AppMode::Normal;
+                self.error_message = None;
+            }
             Action::Yank => match self.state.stack.last() {
                 None => {
                     self.error_message = Some("Stack is empty".into());
@@ -355,7 +392,16 @@ impl App {
                 Ok(())
             }
             Action::SetHexStyle(s) => {
+                if self.state.base != Base::Hex {
+                    return Err(CalcError::InvalidInput(
+                        "Hex style is only available in HEX base".to_string(),
+                    ));
+                }
                 self.state.hex_style = s;
+                Ok(())
+            }
+            Action::SetNotation(n) => {
+                self.state.notation = n;
                 Ok(())
             }
             Action::StoreRegister(name) => {
@@ -409,7 +455,12 @@ impl App {
             | Action::BrowseCursorUp
             | Action::BrowseCursorDown
             | Action::BrowseConfirm
-            | Action::BrowseCancel => unreachable!("handled in apply()"),
+            | Action::BrowseCancel
+            | Action::EnterPrecisionInput
+            | Action::PrecisionDigit(_)
+            | Action::PrecisionBackspace
+            | Action::PrecisionSubmit
+            | Action::PrecisionCancel => unreachable!("handled in apply()"),
         }
     }
 }
@@ -429,6 +480,7 @@ mod tests {
         ops::Op,
         value::CalcValue,
     };
+    use crate::input::mode::ChordCategory;
     use dashu::integer::IBig;
 
     fn push_int(app: &mut App, n: i32) {
@@ -913,6 +965,7 @@ mod tests {
     #[test]
     fn test_set_hex_style_updates_state() {
         let mut app = App::new();
+        app.state.base = Base::Hex; // hex style only valid in HEX base
         app.apply(Action::SetHexStyle(HexStyle::Dollar));
         assert_eq!(app.state.hex_style, HexStyle::Dollar);
         assert!(app.error_message.is_none());
@@ -928,6 +981,7 @@ mod tests {
             HexStyle::Suffix,
         ] {
             let mut app = App::new();
+            app.state.base = Base::Hex; // hex style only valid in HEX base
             app.apply(Action::SetHexStyle(style));
             assert_eq!(
                 app.state.hex_style, style,
@@ -960,8 +1014,9 @@ mod tests {
             "SetAngleMode should clear error_message"
         );
 
-        // SetHexStyle clears error
+        // SetHexStyle clears error (must be in HEX base)
         let mut app3 = App::new();
+        app3.state.base = Base::Hex;
         app3.apply(Action::Execute(Op::Add));
         assert!(app3.error_message.is_some());
         app3.apply(Action::SetHexStyle(HexStyle::Hash));
@@ -1264,7 +1319,7 @@ mod tests {
         // Config::load() returns defaults (no config.toml in test env usually)
         // Regardless, App::new() must set precision from config (default = 15)
         let app = App::new();
-        assert_eq!(app.precision, 15);
+        assert_eq!(app.state.precision, 15);
     }
 
     #[test]
@@ -1425,5 +1480,204 @@ mod tests {
         assert_ne!(app.state.stack, before);
         app.apply(Action::Undo);
         assert_eq!(app.state.stack, before, "undo should restore pre-roll state");
+    }
+
+    // ── configure-settings-chord ────────────────────────────────────────────
+
+    // AC-1: angle mode changes via C› chord (d → DEG)
+    #[test]
+    fn test_set_angle_mode_via_config_chord() {
+        let mut app = App::new();
+        app.apply(Action::EnterChordMode(ChordCategory::Config));
+        app.apply(Action::SetAngleMode(AngleMode::Rad));
+        assert_eq!(app.state.angle_mode, AngleMode::Rad);
+        assert_eq!(app.mode, AppMode::Normal); // chord exited
+        assert!(app.error_message.is_none());
+    }
+
+    // AC-2: base changes via C› chord (h → HEX)
+    #[test]
+    fn test_set_base_via_config_chord() {
+        let mut app = App::new();
+        app.apply(Action::EnterChordMode(ChordCategory::Config));
+        app.apply(Action::SetBase(Base::Hex));
+        assert_eq!(app.state.base, Base::Hex);
+        assert_eq!(app.mode, AppMode::Normal);
+        assert!(app.error_message.is_none());
+    }
+
+    // AC-3: notation switches to sci
+    #[test]
+    fn test_set_notation_sci() {
+        use crate::engine::notation::Notation;
+        let mut app = App::new();
+        app.apply(Action::EnterChordMode(ChordCategory::Config));
+        app.apply(Action::SetNotation(Notation::Sci));
+        assert_eq!(app.state.notation, Notation::Sci);
+        assert_eq!(app.mode, AppMode::Normal);
+        assert!(app.error_message.is_none());
+    }
+
+    // AC-4: notation switches to fixed
+    #[test]
+    fn test_set_notation_fixed() {
+        use crate::engine::notation::Notation;
+        let mut app = App::new();
+        app.state.notation = Notation::Sci;
+        app.apply(Action::SetNotation(Notation::Fixed));
+        assert_eq!(app.state.notation, Notation::Fixed);
+    }
+
+    // AC-5: notation auto mode
+    #[test]
+    fn test_set_notation_auto() {
+        use crate::engine::notation::Notation;
+        let mut app = App::new();
+        app.apply(Action::SetNotation(Notation::Auto));
+        assert_eq!(app.state.notation, Notation::Auto);
+    }
+
+    // AC-6: precision input via C›p
+    #[test]
+    fn test_precision_input_flow() {
+        let mut app = App::new();
+        app.apply(Action::EnterPrecisionInput);
+        assert_eq!(app.mode, AppMode::PrecisionInput(String::new()));
+        app.apply(Action::PrecisionDigit('6'));
+        assert_eq!(app.mode, AppMode::PrecisionInput("6".to_string()));
+        app.apply(Action::PrecisionSubmit);
+        assert_eq!(app.mode, AppMode::Normal);
+        assert_eq!(app.state.precision, 6);
+        assert!(app.error_message.is_none());
+    }
+
+    // AC-7: precision out of range (0) → error, precision unchanged
+    #[test]
+    fn test_precision_out_of_range_rejected() {
+        let mut app = App::new();
+        app.apply(Action::EnterPrecisionInput);
+        app.apply(Action::PrecisionDigit('0'));
+        app.apply(Action::PrecisionSubmit);
+        assert_eq!(app.mode, AppMode::Normal);
+        assert_eq!(app.state.precision, 15); // unchanged
+        assert!(app.error_message.is_some());
+    }
+
+    // AC-6: precision input with 2 digits (e.g. "15")
+    #[test]
+    fn test_precision_input_two_digits() {
+        let mut app = App::new();
+        app.apply(Action::EnterPrecisionInput);
+        app.apply(Action::PrecisionDigit('1'));
+        app.apply(Action::PrecisionDigit('5'));
+        app.apply(Action::PrecisionSubmit);
+        assert_eq!(app.state.precision, 15);
+        assert!(app.error_message.is_none());
+    }
+
+    // AC-6: empty buffer Enter is no-op
+    #[test]
+    fn test_precision_submit_empty_is_noop() {
+        let mut app = App::new();
+        app.apply(Action::EnterPrecisionInput);
+        app.apply(Action::PrecisionSubmit);
+        assert_eq!(app.mode, AppMode::Normal);
+        assert_eq!(app.state.precision, 15); // unchanged
+        assert!(app.error_message.is_none());
+    }
+
+    // AC-6: Esc cancels precision input
+    #[test]
+    fn test_precision_cancel() {
+        let mut app = App::new();
+        app.apply(Action::EnterPrecisionInput);
+        app.apply(Action::PrecisionDigit('5'));
+        app.apply(Action::PrecisionCancel);
+        assert_eq!(app.mode, AppMode::Normal);
+        assert_eq!(app.state.precision, 15); // unchanged
+        assert!(app.error_message.is_none());
+    }
+
+    // AC-6: Backspace deletes last digit
+    #[test]
+    fn test_precision_backspace() {
+        let mut app = App::new();
+        app.apply(Action::EnterPrecisionInput);
+        app.apply(Action::PrecisionDigit('1'));
+        app.apply(Action::PrecisionDigit('2'));
+        app.apply(Action::PrecisionBackspace);
+        if let AppMode::PrecisionInput(buf) = &app.mode {
+            assert_eq!(buf, "1", "backspace should delete last digit");
+        } else {
+            panic!("should still be in PrecisionInput mode");
+        }
+    }
+
+    // AC-8: hex style error when base ≠ HEX
+    #[test]
+    fn test_hex_style_rejected_when_not_hex() {
+        let mut app = App::new();
+        // base is DEC by default
+        app.apply(Action::SetHexStyle(HexStyle::Dollar));
+        assert!(app.error_message.is_some(), "should error when base is not HEX");
+        assert_eq!(app.state.hex_style, HexStyle::ZeroX); // unchanged
+    }
+
+    // AC-9: hex style accepted when base is HEX
+    #[test]
+    fn test_hex_style_accepted_when_hex() {
+        let mut app = App::new();
+        app.apply(Action::SetBase(Base::Hex));
+        app.apply(Action::SetHexStyle(HexStyle::Dollar));
+        assert!(app.error_message.is_none());
+        assert_eq!(app.state.hex_style, HexStyle::Dollar);
+    }
+
+    // AC-10: Esc at chord level cancels (no change)
+    #[test]
+    fn test_config_chord_esc_cancels() {
+        let mut app = App::new();
+        app.apply(Action::EnterChordMode(ChordCategory::Config));
+        app.apply(Action::ChordCancel);
+        assert_eq!(app.mode, AppMode::Normal);
+        assert_eq!(app.state.angle_mode, AngleMode::Deg); // unchanged
+        assert!(app.error_message.is_none());
+    }
+
+    // AC-12: m and x are Noop in Normal mode
+    #[test]
+    fn test_m_and_x_are_noop() {
+        use crate::input::handler::handle_key;
+        use crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyEventState, KeyModifiers};
+        fn key(code: KeyCode) -> KeyEvent {
+            KeyEvent {
+                code,
+                modifiers: KeyModifiers::NONE,
+                kind: KeyEventKind::Press,
+                state: KeyEventState::NONE,
+            }
+        }
+        for c in ['m', 'x', 'X'] {
+            assert_eq!(
+                handle_key(&AppMode::Normal, key(KeyCode::Char(c))),
+                Action::Noop,
+                "'{}' should be Noop",
+                c
+            );
+        }
+    }
+
+    // AC-11: notation and precision persist in CalcState (session serialization)
+    #[test]
+    fn test_notation_and_precision_in_calc_state() {
+        use crate::engine::notation::Notation;
+        let mut state = crate::engine::stack::CalcState::new();
+        state.notation = Notation::Sci;
+        state.precision = 6;
+        let json = serde_json::to_string(&state).expect("serialize");
+        let restored: crate::engine::stack::CalcState =
+            serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(restored.notation, Notation::Sci);
+        assert_eq!(restored.precision, 6);
     }
 }

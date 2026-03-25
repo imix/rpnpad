@@ -1,5 +1,6 @@
 use crate::engine::angle::AngleMode;
 use crate::engine::base::{Base, HexStyle};
+use crate::engine::notation::Notation;
 use crate::engine::ops::Op;
 use crate::engine::value::CalcValue;
 use crate::input::mode::ChordCategory;
@@ -12,6 +13,12 @@ pub enum Action {
     SetBase(Base),
     SetAngleMode(AngleMode),
     SetHexStyle(HexStyle),
+    SetNotation(Notation),
+    EnterPrecisionInput,
+    PrecisionDigit(char),
+    PrecisionBackspace,
+    PrecisionSubmit,
+    PrecisionCancel,
     StoreRegister(String),
     RecallRegister(String),
     DeleteRegister(String),

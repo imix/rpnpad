@@ -1,4 +1,4 @@
-use crate::engine::{angle::AngleMode, base::Base};
+use crate::engine::{angle::AngleMode, base::Base, notation::Notation};
 use serde::Deserialize;
 use std::{
     fs,
@@ -15,6 +15,7 @@ pub fn config_path() -> Option<PathBuf> {
 struct ConfigToml {
     angle_mode: Option<String>,
     base: Option<String>,
+    notation: Option<String>,
     precision: Option<usize>,
     max_undo_history: Option<usize>,
     persist_session: Option<bool>,
@@ -23,6 +24,7 @@ struct ConfigToml {
 pub struct Config {
     pub angle_mode: AngleMode,
     pub base: Base,
+    pub notation: Notation,
     pub precision: usize,
     pub max_undo_history: usize,
     pub persist_session: bool,
@@ -55,6 +57,14 @@ pub(crate) fn load_from_path(path: &Path) -> Config {
             "oct" => cfg.base = Base::Oct,
             "bin" => cfg.base = Base::Bin,
             "dec" => cfg.base = Base::Dec,
+            _ => {} // invalid value — keep default
+        }
+    }
+    if let Some(n) = parsed.notation {
+        match n.to_lowercase().as_str() {
+            "sci" => cfg.notation = Notation::Sci,
+            "auto" => cfg.notation = Notation::Auto,
+            "fixed" => cfg.notation = Notation::Fixed,
             _ => {} // invalid value — keep default
         }
     }
@@ -91,6 +101,7 @@ impl Default for Config {
         Self {
             angle_mode: AngleMode::Deg,
             base: Base::Dec,
+            notation: Notation::Fixed,
             precision: 15,
             max_undo_history: 1000,
             persist_session: true,
@@ -244,5 +255,50 @@ mod tests {
         assert_eq!(cfg.base, Base::Dec);
         assert_eq!(cfg.max_undo_history, 1000);
         assert!(cfg.persist_session);
+    }
+
+    // ── notation config key ─────────────────────────────────────────────────
+
+    #[test]
+    fn test_load_notation_sci() {
+        use crate::engine::notation::Notation;
+        let path = write_temp_toml("rpncalc_cfg_notation_sci.toml", r#"notation = "sci""#);
+        let cfg = load_from_path(&path);
+        cleanup(&path);
+        assert_eq!(cfg.notation, Notation::Sci);
+    }
+
+    #[test]
+    fn test_load_notation_auto() {
+        use crate::engine::notation::Notation;
+        let path = write_temp_toml("rpncalc_cfg_notation_auto.toml", r#"notation = "auto""#);
+        let cfg = load_from_path(&path);
+        cleanup(&path);
+        assert_eq!(cfg.notation, Notation::Auto);
+    }
+
+    #[test]
+    fn test_load_notation_fixed() {
+        use crate::engine::notation::Notation;
+        let path = write_temp_toml("rpncalc_cfg_notation_fixed.toml", r#"notation = "fixed""#);
+        let cfg = load_from_path(&path);
+        cleanup(&path);
+        assert_eq!(cfg.notation, Notation::Fixed);
+    }
+
+    #[test]
+    fn test_notation_default_is_fixed() {
+        use crate::engine::notation::Notation;
+        let cfg = Config::default();
+        assert_eq!(cfg.notation, Notation::Fixed);
+    }
+
+    #[test]
+    fn test_load_notation_invalid_uses_default() {
+        use crate::engine::notation::Notation;
+        let path = write_temp_toml("rpncalc_cfg_notation_bad.toml", r#"notation = "exponential""#);
+        let cfg = load_from_path(&path);
+        cleanup(&path);
+        assert_eq!(cfg.notation, Notation::Fixed); // invalid → default
     }
 }

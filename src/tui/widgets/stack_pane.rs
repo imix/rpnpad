@@ -8,7 +8,7 @@ use ratatui::{
 
 use crate::engine::stack::CalcState;
 
-pub fn render(f: &mut Frame, area: Rect, state: &CalcState, precision: usize, browse_cursor: Option<usize>) {
+pub fn render(f: &mut Frame, area: Rect, state: &CalcState, browse_cursor: Option<usize>) {
     let block = Block::bordered()
         .border_type(BorderType::Rounded)
         .title("Stack")
@@ -51,7 +51,7 @@ pub fn render(f: &mut Frame, area: Rect, state: &CalcState, precision: usize, br
         let position_from_bottom = visible_count - 1 - i;
         let stack_position = position_from_bottom + 1; // 1-indexed from top
 
-        let val_str = val.display_with_precision(state.base, precision);
+        let val_str = val.display_with_notation(state.base, state.precision, state.notation);
         let char_count = val_str.chars().count();
         let val_display = if char_count > val_col_width {
             let truncated: String = val_str
@@ -113,7 +113,7 @@ mod tests {
         let backend = TestBackend::new(width, height);
         let mut terminal = Terminal::new(backend).unwrap();
         terminal
-            .draw(|f| render(f, f.area(), state, 15, browse_cursor))
+            .draw(|f| render(f, f.area(), state, browse_cursor))
             .unwrap();
         terminal.backend().buffer().clone()
     }
