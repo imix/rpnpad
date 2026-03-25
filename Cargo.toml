@@ -1,6 +1,6 @@
 [package]
 name = "rpnpad"
-version = "0.2.5"
+version = "0.2.6"
 edition = "2021"
 description = "An HP48-style RPN calculator for the terminal"
 license = "MIT"
