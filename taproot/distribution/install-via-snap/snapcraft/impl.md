@@ -36,7 +36,7 @@ Integration tests require snapd and Snapcraft:
 
 
 ## Status
-- **State:** complete
+- **State:** needs-rework
 - **Created:** 2026-03-25
 - **Last verified:** 2026-03-25
 
@@ -44,3 +44,4 @@ Integration tests require snapd and Snapcraft:
 - Classic confinement approval from Canonical may take days to weeks. During the review period, use `snap install --devmode rpnpad` for testing.
 - A Snapcraft account (snapcraft.io) is required to publish. Register the snap name `rpnpad` via `snapcraft register rpnpad` before first publish.
 - The snap name `rpnpad` may already be taken on the Snap Store — check before submitting.
+- **External cause (2026-03-25):** GitHub Actions ubuntu-22.04 runners start with snapd in a degraded state. `snapcraft --destructive-mode` fails to install the `core22` base snap unless snapd is explicitly initialised first. Fix: add `sudo systemctl start snapd && sudo snap wait system seed.loaded` before the `Install snapcraft` step.
