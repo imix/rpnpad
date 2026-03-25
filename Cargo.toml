@@ -9,7 +9,7 @@ homepage = "https://github.com/imix/rpncalc"
 
 # cargo-dist release configuration
 [workspace.metadata.dist]
-cargo-dist-version = "0.22.1"
+cargo-dist-version = "0.31.0"
 ci = ["github"]
 installers = ["shell", "homebrew"]
 tap = "imix/homebrew-tap"
@@ -19,7 +19,6 @@ targets = [
     "x86_64-apple-darwin",
 ]
 publish-jobs = ["homebrew"]
-allow-dirty = ["ci"]  # workflow manually updated to ubuntu-latest; skip cargo-dist drift check
 
 [dependencies]
 ratatui = "0.29"
