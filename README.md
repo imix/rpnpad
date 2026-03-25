@@ -43,6 +43,14 @@ brew tap imix/tap
 brew install rpnpad
 ```
 
+### Linux — Snap
+
+```sh
+snap install rpnpad
+```
+
+Requires [snapd](https://snapcraft.io/docs/installing-snapd) (pre-installed on Ubuntu; available on most distros).
+
 ### Linux and macOS — curl installer
 
 ```sh
