@@ -13,7 +13,9 @@ User (CLI power user)
    - Empty stack: push hints and constants
    - 1 item: adds unary operation hints
    - 2+ items: highlights binary operation hints
-3. User identifies the key (or chord) for the desired operation and presses it
+3. Session-level commands (e.g. `Q quit`) appear in a dedicated **SESSION**
+   section, visually separated from stack and arithmetic operations
+4. User identifies the key (or chord) for the desired operation and presses it
 
 ## Alternate Flows
 - **Registers exist**: a register section appears at the bottom of the pane
@@ -50,6 +52,8 @@ stateDiagram-v2
 
 **AC-4:** Given terminal width <60 columns, then the hints pane collapses entirely and no hints are shown.
 
+**AC-5:** Given Normal mode, when the hints pane renders, then `Q quit` appears in a SESSION section that is visually distinct from the STACK section — not grouped with stack manipulation operations (swap, drop, dup, rotate, undo, yank, store).
+
 ## Related
 - **Sibling**: [User executes an operation via chord sequence](../execute-chord-operation/usecase.md)
 - **Parent intent**: [Discoverability](../../intent.md)
@@ -61,4 +65,4 @@ stateDiagram-v2
 ## Status
 - **State:** implemented
 - **Created:** 2026-03-21
-- **Last reviewed:** 2026-03-24
+- **Last reviewed:** 2026-03-25
