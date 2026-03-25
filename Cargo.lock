@@ -795,8 +795,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "rpncalc"
-version = "0.2.2"
+name = "rpnpad"
+version = "0.2.3"
 dependencies = [
  "arboard",
  "crossterm",
