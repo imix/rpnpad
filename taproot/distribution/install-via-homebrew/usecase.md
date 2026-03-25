@@ -98,6 +98,9 @@ sequenceDiagram
 - When Homebrew verifies the checksum
 - Then Homebrew aborts installation and reports a checksum error; no binary is placed on PATH
 
+## Implementations <!-- taproot-managed -->
+- [cargo-dist Homebrew formula + README](./homebrew-formula/impl.md)
+
 ## Status
 - **State:** specified
 - **Created:** 2026-03-24
