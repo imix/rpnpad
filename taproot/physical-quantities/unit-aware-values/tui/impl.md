@@ -33,6 +33,7 @@
 - f87e884 taproot(physical-quantities/unit-aware-values): contextual hints — filter by category, show unit syntax
 - `d63b4cd207f2abf20ac90071dc11bfde503dd4eb` — (auto-linked by taproot link-commits)
 - `af5812435d939342495cbf395806815c79e25bf5` — (auto-linked by taproot link-commits)
+- `cf15106a5bd8413216af6b1e466d3ec79d2e429f` — (auto-linked by taproot link-commits)
 
 ## Tests
 - `src/engine/units.rs` — unit conversion math: weight (oz↔g, lb↔kg), length (ft↔m, in↔cm), temperature (°F↔°C); incompatible category error; unknown unit lookup
@@ -42,9 +43,12 @@
 - `src/engine/ops.rs` — AC-7 (same unit add), AC-8 (cross-unit add → p1's unit), AC-11 (incompatible categories error), AC-14 (scalar×tagged), AC-15 (plain+tagged error), AC-17 (same-unit div → dimensionless), AC-18 (tagged×tagged error), AC-20 (negate preserves unit)
 - `src/tui/app.rs` — AC-3 (weight convert), AC-5 (°F→°C), AC-12 (incompatible convert error), AC-13 (convert on unitless error); AC-14 end-to-end: compound-to-compound via App::apply (m/s → ft/s), unknown compound unit still errors
 - `src/tui/widgets/hints_pane.rs` — AC-23 compound unit: ConvertInput shows COMPOUND UNIT section with source unit; does not show WEIGHT/LENGTH/TEMPERATURE groups
+- `src/tui/widgets/input_line.rs` — AC-26: ConvertInput renders `> <buf>_` (typed unit expression with cursor)
 
 ## DoD Resolutions
 - condition: document-current | note: README updated with Physical Units section (unit input syntax, supported units table, conversion with U key and `in <unit>` Alpha command, arithmetic behaviour for same-category values, scalar multiplication, dimensionless division, temperature conversion). U key added to Normal Mode key reference table. Unit Mode key table added. `in <unit>` added to Alpha mode commands table. All user-visible behaviour is accurately reflected. | resolved: 2026-03-26
+- condition: document-current | note: Input line display for ConvertInput is an internal UI consistency fix — same '> <buf>_' pattern already rendered for Insert/Alpha modes. No new key bindings, modes, or user-visible behaviour documented separately. README Unit Mode table already describes the U key flow accurately. Nothing to update. | resolved: 2026-03-26T12:36:44.919Z
+
 - condition: document-current | note: Bug fix only: removed simple-unit-only guard from app.rs ConvertUnit arm. The guard was blocking compound unit conversion before convert_to() was reached; convert_to() already handled compound units correctly. No new user-visible behaviour — compound unit conversion (e.g. m/s → km/h) was already documented in README. Nothing to update. | resolved: 2026-03-26T12:19:15.199Z
 
 - condition: document-current | note: Hints pane UI fix only: CompoundInput now shows COMPOUND UNIT section instead of irrelevant Weight/Length/Temperature groups when a compound unit is at stack top. No new key bindings, modes, or conversion behaviors introduced. README already documents compound unit conversion (U key, 27.78 m/s → km/h example). Nothing to update. | resolved: 2026-03-26T12:12:16.059Z

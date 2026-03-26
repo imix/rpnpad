@@ -4,7 +4,7 @@ use crate::input::mode::AppMode;
 
 pub fn render(f: &mut Frame, area: Rect, mode: &AppMode) {
     let text = match mode {
-        AppMode::Insert(buf) | AppMode::InsertUnit(buf) | AppMode::Alpha(buf) | AppMode::AlphaStore(buf) => {
+        AppMode::Insert(buf) | AppMode::InsertUnit(buf) | AppMode::Alpha(buf) | AppMode::AlphaStore(buf) | AppMode::ConvertInput(buf) => {
             format!("> {}_", buf)
         }
         _ => "> ".to_string(),
@@ -112,6 +112,30 @@ mod tests {
         assert!(
             content.contains("> _"),
             "empty AlphaStore buffer should show '> _': {:?}",
+            content
+        );
+    }
+
+    // AC-26: ConvertInput mode shows typed unit expression with cursor
+    #[test]
+    fn test_convert_input_shows_buffer_and_cursor() {
+        let buf = render_input_line(&AppMode::ConvertInput("km".into()), 20);
+        let content = row_content(&buf, 0);
+        assert!(
+            content.contains("> km_"),
+            "ConvertInput should show '> km_': {:?}",
+            content
+        );
+    }
+
+    // AC-26: ConvertInput with empty buffer shows cursor only
+    #[test]
+    fn test_convert_input_empty_shows_cursor() {
+        let buf = render_input_line(&AppMode::ConvertInput(String::new()), 20);
+        let content = row_content(&buf, 0);
+        assert!(
+            content.contains("> _"),
+            "empty ConvertInput should show '> _': {:?}",
             content
         );
     }
