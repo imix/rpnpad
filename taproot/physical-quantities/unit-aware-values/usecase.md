@@ -245,6 +245,22 @@ sequenceDiagram
 - When rpnpad is reopened
 - Then the stack still displays `1.9 oz` at position 1
 
+**AC-23: ConvertInput hint panel shows complete grouped unit reference**
+- Given the user presses `U` and the mode bar shows `[UNIT]`
+- When the hints pane renders
+- Then it displays a mode header `CONVERT TO UNIT`, a key table listing `Enter` (convert), `Esc` (cancel), `Backspace` (delete), and a complete unit reference grouped by category:
+  - Weight: `g`  `kg`  `lb`  `oz`
+  - Length: `cm`  `ft`  `in`  `km`  `m`  `mi`  `mm`  `yd`
+  - Temperature: `°C`  `°F`  (aliases: `C`  `degC`  `degF`  `F`)
+
+**AC-24: UNITS section in Normal mode is conditional on a tagged stack top**
+- Given the stack top is a unit-tagged value
+- When the hints pane renders in Normal mode
+- Then a `UNITS` section is visible containing: `U  convert`
+- And given the stack top is a plain number or the stack is empty
+- When the hints pane renders in Normal mode
+- Then no `UNITS` section is visible
+
 ## Implementations <!-- taproot-managed -->
 - [tui](./tui/impl.md)
 

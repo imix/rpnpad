@@ -42,7 +42,7 @@
 - condition: document-current | note: README updated with Physical Units section (unit input syntax, supported units table, conversion with U key and `in <unit>` Alpha command, arithmetic behaviour for same-category values, scalar multiplication, dimensionless division, temperature conversion). U key added to Normal Mode key reference table. Unit Mode key table added. `in <unit>` added to Alpha mode commands table. All user-visible behaviour is accurately reflected. | resolved: 2026-03-26
 
 ## Status
-- **State:** complete
+- **State:** needs-rework
 - **Created:** 2026-03-26
 - **Last verified:** 2026-03-26
 
