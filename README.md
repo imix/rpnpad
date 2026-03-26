@@ -275,6 +275,18 @@ The space triggers unit expression context — all subsequent keys (including `/
 
 **Input grammar:** `<numerator>/<denominator>`, where each part contains unit atoms joined by `*` or space. Exponents are plain ASCII digits (`m2`, `s2`, not `m²`). Both `*` and space are accepted as numerator separators.
 
+**Common unit aliases** — short names for derived SI units are accepted directly:
+
+```
+9.8 N       → pushes 9.8 kg·m/s² (newton — force)
+100 kph     → pushes 100 km/h (speed)
+101325 Pa   → pushes 101325 kg/m·s² (pascal — pressure)
+4.2 J       → pushes 4.2 kg·m²/s² (joule — energy)
+60 W        → pushes 60 kg·m²/s³ (watt — power)
+```
+
+The alias is resolved to its canonical compound form on entry; the stack and all downstream operations see the canonical unit. When a stack value's dimension matches a known alias, the hints pane UNITS section shows the alias name as a named conversion target (e.g. `→ N`).
+
 ### Supported units
 
 | Category | Units |

@@ -1,4 +1,4 @@
-use crate::engine::units::{atoms_to_dim, atoms_to_display, lookup_unit, parse_unit_expr_atoms, TaggedValue};
+use crate::engine::units::{atoms_to_dim, atoms_to_display, lookup_alias, lookup_unit, parse_unit_expr_atoms, TaggedValue};
 use crate::engine::value::CalcValue;
 use crate::engine::CalcError;
 use dashu::float::round::mode::Zero;
@@ -41,6 +41,22 @@ fn try_parse_tagged(input: &str) -> Result<Option<CalcValue>, CalcError> {
                 }
                 let tagged = TaggedValue::new(base_val.to_f64(), *abbrev);
                 return Ok(Some(CalcValue::Tagged(tagged)));
+            }
+        }
+    }
+
+    // 1.5. Try unit alias lookup (e.g. "N" → "kg*m/s2", "kph" → "km/h").
+    if let Some((num_str, unit_expr)) = split_number_unit(trimmed) {
+        if let Some(canonical) = lookup_alias(unit_expr) {
+            if let Ok(base_val) = parse_decimal_exact(num_str) {
+                if let Ok(atoms) = parse_unit_expr_atoms(canonical) {
+                    if !atoms.is_empty() {
+                        let dim = atoms_to_dim(&atoms);
+                        let display = atoms_to_display(&atoms);
+                        let tv = TaggedValue::new_compound(base_val, display, dim);
+                        return Ok(Some(CalcValue::Tagged(tv)));
+                    }
+                }
             }
         }
     }
@@ -510,6 +526,90 @@ mod tests {
             CalcValue::Tagged(tv) => {
                 assert_eq!(tv.unit, "kg*m/s2");
                 assert!((tv.amount.to_f64().value() - 80.0).abs() < 1e-9);
+            }
+            _ => panic!("expected Tagged"),
+        }
+    }
+
+    // ── unit alias parsing ────────────────────────────────────────────────────
+
+    // AC-1: "9.8 N" resolves to TaggedValue with canonical unit "kg*m/s2"
+    #[test]
+    fn test_parse_alias_newton() {
+        let result = parse_value("9.8 N").unwrap();
+        match result {
+            CalcValue::Tagged(tv) => {
+                assert_eq!(tv.unit, "kg*m/s2", "N should resolve to kg*m/s2, got {}", tv.unit);
+                assert!((tv.amount.to_f64().value() - 9.8).abs() < 1e-6);
+            }
+            _ => panic!("expected Tagged, got {:?}", result),
+        }
+    }
+
+    // AC-4: "100 kph" resolves to TaggedValue with canonical unit "km/h"
+    #[test]
+    fn test_parse_alias_kph() {
+        let result = parse_value("100 kph").unwrap();
+        match result {
+            CalcValue::Tagged(tv) => {
+                assert_eq!(tv.unit, "km/h", "kph should resolve to km/h, got {}", tv.unit);
+                assert!((tv.amount.to_f64().value() - 100.0).abs() < 1e-9);
+            }
+            _ => panic!("expected Tagged, got {:?}", result),
+        }
+    }
+
+    // AC-6: unknown unit string still errors (alias path doesn't shadow the error)
+    #[test]
+    fn test_parse_unknown_still_errors() {
+        // Plain unknown suffix (no / or *): falls through to number parser → InvalidInput
+        let result = parse_value("9.8 xyz");
+        assert!(
+            matches!(&result, Err(CalcError::InvalidInput(_))),
+            "unknown unit string should error, got: {:?}", result
+        );
+        // Unknown compound unit: explicitly "unknown unit" message
+        let result2 = parse_value("9.8 xyz/s2");
+        assert!(
+            matches!(&result2, Err(CalcError::InvalidInput(e)) if e.contains("unknown unit")),
+            "unknown compound unit should report unknown unit, got: {:?}", result2
+        );
+    }
+
+    // AC-7: direct compound entry ("9.8 kg*m/s2") produces same canonical unit as alias "N"
+    #[test]
+    fn test_parse_direct_compound_unchanged() {
+        let alias_result = parse_value("9.8 N").unwrap();
+        let direct_result = parse_value("9.8 kg*m/s2").unwrap();
+        match (alias_result, direct_result) {
+            (CalcValue::Tagged(a), CalcValue::Tagged(d)) => {
+                assert_eq!(a.unit, d.unit, "alias and direct entry should produce same unit");
+                assert_eq!(a.dim, d.dim, "alias and direct entry should produce same DimensionVector");
+            }
+            _ => panic!("expected both to be Tagged"),
+        }
+    }
+
+    // AC-9: alias-resolved value stores canonical unit string (not the alias itself)
+    #[test]
+    fn test_alias_stores_canonical_unit() {
+        let result = parse_value("5 N").unwrap();
+        match result {
+            CalcValue::Tagged(tv) => {
+                assert_ne!(tv.unit, "N", "alias should not be stored as unit label");
+                assert_eq!(tv.unit, "kg*m/s2", "canonical form should be stored");
+            }
+            _ => panic!("expected Tagged"),
+        }
+    }
+
+    // Pa alias resolves correctly
+    #[test]
+    fn test_parse_alias_pa() {
+        let result = parse_value("101325 Pa").unwrap();
+        match result {
+            CalcValue::Tagged(tv) => {
+                assert_eq!(tv.unit, "kg/m*s2", "Pa should resolve to kg/m*s2, got {}", tv.unit);
             }
             _ => panic!("expected Tagged"),
         }

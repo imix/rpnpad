@@ -28,6 +28,9 @@
 - condition: numeric-types | note: no new CalcValue variant introduced; alias-resolved TaggedValues use the existing `amount: FBig` field via `TaggedValue::new_compound` (same construction as compound-unit-operations); no f64 routing; serde round-trip unchanged (unit stored as canonical String, dim as DimensionVector) | resolved: 2026-03-26
 
 ## Status
-- **State:** in-progress
+- **State:** complete
 - **Created:** 2026-03-26
 - **Last verified:** 2026-03-26
+
+## DoD Resolutions
+- condition: document-current | note: README.md updated: added 'Common unit aliases' block under 'Entering unit-tagged values' with examples for N, kph, Pa, J, W and note that hints pane shows alias conversion targets | resolved: 2026-03-26T15:06:55.372Z

@@ -189,6 +189,39 @@ pub fn lookup_unit(abbrev: &str) -> Option<&'static Unit> {
     UNITS.iter().find(|u| u.abbrev == abbrev)
 }
 
+// ── Unit aliases ──────────────────────────────────────────────────────────────
+
+/// Common unit aliases: short names that map to canonical compound expressions.
+/// Checked before the compound parser so e.g. "N" is resolved without needing
+/// the user to type "kg*m/s2".
+pub static UNIT_ALIASES: &[(&str, &str)] = &[
+    ("N",   "kg*m/s2"),   // newton  — force
+    ("kph", "km/h"),      // speed   — kilometres per hour
+    ("Pa",  "kg/m*s2"),   // pascal  — pressure (kg·m⁻¹·s⁻²)
+    ("J",   "kg*m2/s2"),  // joule   — energy
+    ("W",   "kg*m2/s3"),  // watt    — power
+];
+
+/// Look up an alias by its short name. Returns the canonical compound string.
+pub fn lookup_alias(s: &str) -> Option<&'static str> {
+    UNIT_ALIASES.iter().find(|(alias, _)| *alias == s).map(|(_, canonical)| *canonical)
+}
+
+/// Return the alias names whose resolved DimensionVector equals `dim`.
+/// Used by the hints pane to surface named conversion targets.
+pub fn aliases_for_dim(dim: &DimensionVector) -> Vec<&'static str> {
+    UNIT_ALIASES
+        .iter()
+        .filter(|(_, canonical)| {
+            parse_unit_expr_atoms(canonical)
+                .ok()
+                .map(|atoms| atoms_to_dim(&atoms) == *dim)
+                .unwrap_or(false)
+        })
+        .map(|(alias, _)| *alias)
+        .collect()
+}
+
 // ── Compound unit helpers ─────────────────────────────────────────────────────
 
 /// Parse a single unit atom: `<abbrev>[<exponent>]`.
@@ -1021,5 +1054,31 @@ mod tests {
             dim: DimensionVector { m: 1, s: -1, ..Default::default() },
         };
         assert!(matches!(tv.convert_to("kg"), Err(CalcError::IncompatibleUnits(_))));
+    }
+
+    // ── unit alias helpers ────────────────────────────────────────────────────
+
+    #[test]
+    fn test_aliases_for_dim_force() {
+        // force dimension: kg*m*s⁻² → N should be returned
+        let force_dim = DimensionVector { kg: 1, m: 1, s: -2, ..Default::default() };
+        let aliases = aliases_for_dim(&force_dim);
+        assert!(aliases.contains(&"N"), "N should match force dimension, got: {:?}", aliases);
+    }
+
+    #[test]
+    fn test_aliases_for_dim_speed() {
+        // speed dimension: m*s⁻¹ → kph should be returned
+        let speed_dim = DimensionVector { m: 1, s: -1, ..Default::default() };
+        let aliases = aliases_for_dim(&speed_dim);
+        assert!(aliases.contains(&"kph"), "kph should match speed dimension, got: {:?}", aliases);
+    }
+
+    #[test]
+    fn test_aliases_for_dim_no_match() {
+        // pure length dimension has no alias
+        let length_dim = DimensionVector { m: 1, ..Default::default() };
+        let aliases = aliases_for_dim(&length_dim);
+        assert!(aliases.is_empty(), "no alias should match plain length, got: {:?}", aliases);
     }
 }

@@ -8,7 +8,7 @@ use ratatui::{
 
 use crate::engine::base::Base;
 use crate::engine::stack::CalcState;
-use crate::engine::units::UnitCategory;
+use crate::engine::units::{aliases_for_dim, UnitCategory};
 use crate::engine::value::CalcValue;
 use crate::input::mode::{AppMode, ChordCategory};
 
@@ -336,6 +336,11 @@ pub fn render(f: &mut Frame, area: Rect, mode: &AppMode, state: &CalcState) {
         lines.push(Line::raw(""));
         lines.push(Line::styled("UNITS", dim));
         lines.extend(entries_to_lines(UNIT_OPS));
+        if let Some(CalcValue::Tagged(tv)) = state.stack.last() {
+            for alias in aliases_for_dim(&tv.dim) {
+                lines.push(Line::raw(format!("  → {}", alias)));
+            }
+        }
     }
 
     lines.push(Line::raw(""));
@@ -1090,6 +1095,55 @@ mod tests {
         let buf = render_hints(AppMode::Normal, state_with_depth(1), 40, 25);
         let content = full_content(&buf);
         assert!(!content.contains("UNITS"), "no UNITS section for plain value: {:?}", content);
+    }
+
+    // ── unit-aliases AC-5: alias names in UNITS section ──────────────────────
+
+    // AC-5: force-dimensioned stack top → "N" appears in UNITS section as a conversion target
+    #[test]
+    fn test_units_section_shows_alias_for_force_dim() {
+        use crate::engine::units::{DimensionVector, TaggedValue};
+        use dashu::float::FBig;
+        let mut s = CalcState::new();
+        // Push a TaggedValue with force dimension (kg*m/s2) — same as N
+        let tv = TaggedValue::new_compound(
+            FBig::try_from(9.8_f64).unwrap(),
+            "kg*m/s2".to_string(),
+            DimensionVector { kg: 1, m: 1, s: -2, ..Default::default() },
+        );
+        s.stack.push(CalcValue::Tagged(tv));
+        let buf = render_hints(AppMode::Normal, s, 60, 25);
+        let content = full_content(&buf);
+        assert!(content.contains("→ N"), "UNITS section should show '→ N' for force dim, got: {:?}", content);
+    }
+
+    // Speed dimension → kph appears in UNITS section
+    #[test]
+    fn test_units_section_shows_alias_for_speed_dim() {
+        use crate::engine::units::{DimensionVector, TaggedValue};
+        use dashu::float::FBig;
+        let mut s = CalcState::new();
+        let tv = TaggedValue::new_compound(
+            FBig::try_from(100.0_f64).unwrap(),
+            "km/h".to_string(),
+            DimensionVector { m: 1, s: -1, ..Default::default() },
+        );
+        s.stack.push(CalcValue::Tagged(tv));
+        let buf = render_hints(AppMode::Normal, s, 60, 25);
+        let content = full_content(&buf);
+        assert!(content.contains("→ kph"), "UNITS section should show '→ kph' for speed dim, got: {:?}", content);
+    }
+
+    // Plain length value → no alias shown
+    #[test]
+    fn test_units_section_no_alias_for_length_dim() {
+        use crate::engine::units::TaggedValue;
+        let mut s = CalcState::new();
+        s.stack.push(CalcValue::Tagged(TaggedValue::new(6.0, "ft")));
+        let buf = render_hints(AppMode::Normal, s, 60, 25);
+        let content = full_content(&buf);
+        assert!(!content.contains("→ N"), "no N alias for length: {:?}", content);
+        assert!(!content.contains("→ kph"), "no kph alias for length: {:?}", content);
     }
 
     // ── unit-aware-values AC-25: Insert mode unit syntax hint ─────────────────
