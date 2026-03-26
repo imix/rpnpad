@@ -159,7 +159,7 @@ stateDiagram-v2
   the discoverable path, `s` is the expert shortcut.
 - **Visible-window limit**: Browse mode does not scroll the stack pane.
   Items beyond the visible rows are not reachable. On deep stacks,
-  the user must rely on rotate (`r`) sequences or undo/redo to expose
+  the user must rely on rotate (`R`) sequences or undo/redo to expose
   deeply buried items.
 
 ## Implementations <!-- taproot-managed -->

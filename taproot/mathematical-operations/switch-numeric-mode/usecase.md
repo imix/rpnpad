@@ -7,17 +7,16 @@ User (CLI power user)
 - rpnpad is running in normal mode
 
 ## Main Flow
-1. User triggers a mode switch via chord:
-   - **Base** (`x` leader + second key): cycles between DEC / HEX / OCT / BIN
-   - **Angle mode** (`m` leader + second key): switches between DEG / RAD / GRAD
-   - **Hex style** (`X` leader + second key): cycles representation prefix
-     (`0xFF` → `$FF` → `#FF` → `FFh`) — only active in HEX base
-2. All stack values immediately redisplay in the new base/style
-3. ModeBar updates to reflect the new active mode
+1. User presses `C` to enter the `C›` config chord; hints pane switches to the config submenu.
+2. User presses one of the mode-switch keys:
+   - **Base**: `c` → DEC, `h` → HEX, `o` → OCT, `b` → BIN
+   - **Angle mode**: `d` → DEG, `r` → RAD, `g` → GRAD
+   - **Hex style** (only available when base is HEX): `1` → `0xFF`, `2` → `$FF`, `3` → `#FF`, `4` → `FFh`
+3. All stack values immediately redisplay in the new base/style
+4. ModeBar updates to reflect the new active mode; `C›` chord exits
 
 ## Alternate Flows
-- **Hex style when not in HEX base**: chord is a no-op (or unavailable
-  in hints pane context)
+- **Hex style when not in HEX base**: key is treated as `ChordInvalid`; error shown on ErrorLine; chord exits without changing state
 
 ## Error Conditions
 - None — mode switching cannot fail
@@ -32,17 +31,20 @@ User (CLI power user)
 ```mermaid
 stateDiagram-v2
     [*] --> Normal
-    Normal --> Chord : x / m / X leader key
-    Chord --> Normal : second key → mode updated, stack redisplays, ModeBar updates
-    Chord --> Normal : Esc — cancelled, no change
+    Normal --> ChordC : C leader key
+    ChordC --> Normal : base key (c/h/o/b) → base updated, stack redisplays, ModeBar updates
+    ChordC --> Normal : angle key (d/r/g) → angle mode updated, ModeBar updates
+    ChordC --> Normal : hex style key (1/2/3/4) — base=HEX → style updated
+    ChordC --> Normal : hex style key (1/2/3/4) — base≠HEX → ErrorLine
+    ChordC --> Normal : Esc — cancelled, no change
 ```
 
 ## Acceptance Criteria
-**AC-1:** Given the user presses the `x` chord leader followed by a base key (e.g. `h` for HEX), then all stack values redisplay in the new base and the ModeBar updates.
+**AC-1:** Given the user presses `C` then a base key (`c`/`h`/`o`/`b`), then all stack values redisplay in the new base and the ModeBar updates.
 
-**AC-2:** Given the user presses the `m` chord leader followed by an angle key (e.g. `r` for RAD), then the active angle mode updates and the ModeBar reflects the change.
+**AC-2:** Given the user presses `C` then an angle key (`d`/`r`/`g`), then the active angle mode updates and the ModeBar reflects the change.
 
-**AC-3:** Given the user presses the `X` chord leader followed by a style key, then the hex representation style updates and stack values redisplay in the new style.
+**AC-3:** Given the user is in HEX base and presses `C` then a hex style key (`1`–`4`), then the hex representation style updates and stack values redisplay in the new style.
 
 ## Related
 - **Sibling**: [User applies a mathematical operation to stacked values](../apply-operation/usecase.md)
@@ -56,4 +58,4 @@ stateDiagram-v2
 ## Status
 - **State:** implemented
 - **Created:** 2026-03-21
-- **Last reviewed:** 2026-03-24
+- **Last reviewed:** 2026-03-26

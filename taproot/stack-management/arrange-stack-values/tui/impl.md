@@ -5,7 +5,7 @@
 
 ## Design Decisions
 - Ops map to single-key normal-mode bindings: `s`=swap, `p`=dup,
-  `Backspace`=drop, `r`=rotate, Enter-with-empty-buffer=dup (HP48 convention)
+  `Backspace`=drop, `R`=rotate, Enter-with-empty-buffer=dup (HP48 convention)
 - `Backspace` is the sole drop key in Normal mode — muscle memory for users
   coming from text editors; `d` is now Noop (freed for future use)
 - `Delete` is the key for clear — removes all stack items; no error when
@@ -18,7 +18,7 @@
 ## Source Files
 - `src/engine/stack.rs` — CalcState: swap(), dup(), drop(),
   rotate(), clear() — all transactional, return Result
-- `src/input/handler.rs` — handle_key(): maps s/p/Backspace/r/Enter/Delete
+- `src/input/handler.rs` — handle_key(): maps s/p/Backspace/R/Enter/Delete
   to Action::Execute(Op::*); d → Noop
 - `src/tui/widgets/hints_pane.rs` — STACK_OPS and Insert mode hints updated
   to show Backspace for drop instead of d
@@ -39,7 +39,7 @@
 ## Status
 - **State:** complete
 - **Created:** 2026-03-21
-- **Last verified:** 2026-03-25
+- **Last verified:** 2026-03-26
 
 ## Notes
 None

@@ -12,7 +12,7 @@ User (CLI power user)
 1. User triggers an operation:
    - **Immediate key** (normal mode): `+` `-` `*` `/` `^` `%` `!` `n` —
      executes directly without a chord
-   - **Chord sequence**: user presses a leader key (`t` `l` `f` `c` `x` etc.),
+   - **Chord sequence**: user presses a leader key (`t` `l` `f` `c` `C` etc.),
      hints pane switches to submenu, user presses second key to execute
 2. Engine pops required operands, computes result, pushes result onto stack
 3. Stack display updates immediately with the new value
@@ -67,4 +67,4 @@ stateDiagram-v2
 ## Status
 - **State:** implemented
 - **Created:** 2026-03-21
-- **Last reviewed:** 2026-03-24
+- **Last reviewed:** 2026-03-26

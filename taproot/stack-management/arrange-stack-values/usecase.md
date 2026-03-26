@@ -13,7 +13,7 @@ User (CLI power user)
    - `s` — swap: exchanges positions 1 and 2
    - `p` — dup: duplicates position 1, pushing a copy onto the stack
    - `Backspace` — drop: discards position 1
-   - `r` — rotate: cycles top three down (1→3, 2→1, 3→2)
+   - `R` — rotate: cycles top three down (1→3, 2→1, 3→2)
    - `Delete` — clear: removes all values from the stack (no error if already empty)
 2. Stack updates immediately; display reflects new arrangement
 
@@ -33,8 +33,8 @@ User (CLI power user)
 ```mermaid
 stateDiagram-v2
     [*] --> Normal
-    Normal --> Normal : s/p/Bksp/r — ok → stack updated
-    Normal --> Normal : s/p/Bksp/r — underflow → ErrorLine
+    Normal --> Normal : s/p/Bksp/R — ok → stack updated
+    Normal --> Normal : s/p/Bksp/R — underflow → ErrorLine
     Normal --> Normal : Delete — stack cleared
 ```
 
@@ -45,7 +45,7 @@ stateDiagram-v2
 
 ~~**AC-3:** Given the stack has ≥1 item, when the user presses `d`, then position 1 is removed from the stack.~~ *(deprecated — `d` is now Noop; use Backspace)*
 
-**AC-4:** Given the stack has ≥3 items, when the user presses `r`, then the top three items cycle down: position 1 moves to 3, position 2 moves to 1, and position 3 moves to 2.
+**AC-4:** Given the stack has ≥3 items, when the user presses `R`, then the top three items cycle down: position 1 moves to 3, position 2 moves to 1, and position 3 moves to 2.
 
 **AC-5:** Given insufficient stack depth for the chosen operation, when the key is pressed, then an error is shown on the ErrorLine and the stack is unchanged.
 
@@ -66,5 +66,5 @@ stateDiagram-v2
 ## Status
 - **State:** implemented
 - **Created:** 2026-03-21
-- **Last reviewed:** 2026-03-25
+- **Last reviewed:** 2026-03-26
 
