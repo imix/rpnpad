@@ -122,6 +122,7 @@ stateDiagram-v2
 - Then the result is `10 kg*m/s2` — alias-resolved values combine correctly
 
 ## Implementations <!-- taproot-managed -->
+- [tui](./tui/impl.md)
 
 ## Status
 - **State:** specified
