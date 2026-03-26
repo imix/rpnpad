@@ -66,7 +66,7 @@ stacked values and control the numeric modes that govern their computation.
 - **[compound-unit-model](./physical-quantities/compound-unit-model/usecase.md)** `[implemented]` — Actor: rpnpad application (internal refactor — no new user-visible behaviour; the observable outcomes are regression stability and graceful session migration)
   - [tui](./physical-quantities/compound-unit-model/tui/impl.md) `[complete]` (2 commits, 2 tests)
 - **[compound-unit-operations](./physical-quantities/compound-unit-operations/usecase.md)** `[implemented]` — Actor: CLI power user (engineer, scientist, or anyone computing with derived physical quantities such as speed, force, or area)
-  - [tui](./physical-quantities/compound-unit-operations/tui/impl.md) `[complete]` (2 commits, 4 tests)
+  - [tui](./physical-quantities/compound-unit-operations/tui/impl.md) `[complete]` (3 commits, 4 tests)
 - **[unit-aware-values](./physical-quantities/unit-aware-values/usecase.md)** `[implemented]` — Actor: CLI power user (engineer, scientist, or anyone performing real-world calculations)
   - [tui](./physical-quantities/unit-aware-values/tui/impl.md) `[complete]` (4 commits, 8 tests)
 

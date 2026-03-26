@@ -8,7 +8,7 @@ User (CLI power user)
 
 ## Main Flow
 1. User presses a chord leader key: `t` (trig), `l` (log/exp), `f` (functions),
-   `c` (constants), `m` (angle-mode), `x` (base), `X` (hex-style)
+   `r` (round), `c` (constants), `C` (config)
 2. Calculator enters chord-wait state; hints pane switches to submenu view
    showing the category header and available second keys
 3. User presses the second key to execute the target operation
@@ -32,7 +32,7 @@ User (CLI power user)
 ```mermaid
 stateDiagram-v2
     [*] --> Normal
-    Normal --> Chord : leader key (t/l/f/c/m/x/X)
+    Normal --> Chord : leader key (t/l/f/r/c/C)
     Chord --> Normal : valid second key → operation executes
     Chord --> Normal : Esc → cancelled, no change
     Chord --> Normal : invalid key → ErrorLine
@@ -59,4 +59,4 @@ stateDiagram-v2
 ## Status
 - **State:** implemented
 - **Created:** 2026-03-21
-- **Last reviewed:** 2026-03-24
+- **Last reviewed:** 2026-03-26

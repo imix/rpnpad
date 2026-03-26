@@ -97,9 +97,9 @@ stateDiagram-v2
 ## Status
 - **State:** implemented
 - **Created:** 2026-03-25
-- **Last reviewed:** 2026-03-25
+- **Last reviewed:** 2026-03-26
 
 ## Notes
-- **Key binding conflict — must resolve before implementation:** In the current Normal-mode binding table, `q` = quit and `s` = swap. Both conflict with the natural mnemonic assignments (q for x², s for √). Implementation must resolve this — likely options: (a) rebind quit from `q` to `ctrl-q` or `ctrl-c`, freeing `q` for x²; (b) choose a different unused letter for √ (e.g. no obvious mnemonic exists — this needs a decision). This conflict is the primary open question for the implementation commit.
+- **Key binding resolution:** `q` was rebound to x² and quit moved to `Q` (shift-Q — keeps single-key quit without a ctrl modifier). `w` was assigned to √ (`s` remains swap; `\` was rejected as awkward to type on most keyboards).
 - The `f›` chord label `fn` is opaque and contributed to the discoverability problem. Consider renaming it to `f›  √x²` or similar in the chord submenu header as a low-cost companion fix.
 - x² and √ are the two highest-frequency functions in the `f›` group; reciprocal and abs are deliberately left chord-only to avoid over-populating the Normal-mode direct key space.

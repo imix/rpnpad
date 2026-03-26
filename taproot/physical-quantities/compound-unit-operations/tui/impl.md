@@ -26,6 +26,7 @@
 - (auto-linked by taproot link-commits)
 - `9605617f8a00a75824d5a4f79ba4256271c16f4f` — (auto-linked by taproot link-commits)
 - `aa091b03685ea489bec66a061288f0222942811c` — (auto-linked by taproot link-commits)
+- `363334656107237b400be5f222b048d44c208253` — (auto-linked by taproot link-commits)
 
 ## Tests
 - `src/engine/units.rs` — `test_parse_unit_expr_atoms_*` (AC-1/AC-2 atom parsing), `test_combine_atoms_mul_*` (AC-4/AC-5/AC-6 unit combination), `test_compound_to_si_scale` (conversion factor), `test_convert_tagged_compound` (AC-14 compound convert)
