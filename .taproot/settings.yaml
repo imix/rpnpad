@@ -7,6 +7,9 @@ agents:
   - cursor
   - generic
 
+definitionOfReady:
+  - hints-spec: if the impl source files include hints_pane.rs or introduce a new AppMode, the parent usecase.md must have ACs satisfying the new-mode checklist in .taproot/docs/hints-architecture.md — mode header text, every key and its label, complete grouped reference for any typed-input mode, and the Normal-mode section visibility condition for the triggering key
+
 definitionOfDone:
   - document-current: check README.md — every user-visible behaviour, key binding, configuration option, and distribution channel described in the implementation must be accurately reflected in the README; update any section that is missing or out of date
 
