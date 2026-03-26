@@ -498,16 +498,9 @@ impl App {
                 let top = self.state.stack.last().ok_or(CalcError::StackUnderflow)?;
                 match top {
                     CalcValue::Tagged(tv) => {
-                        // Validate target unit exists
-                        let target_display = lookup_unit(&target)
-                            .map(|u| u.display)
-                            .unwrap_or(target.as_str());
-                        if lookup_unit(target_display).is_none() {
-                            return Err(CalcError::InvalidInput(format!(
-                                "Unknown unit: {}",
-                                target
-                            )));
-                        }
+                        // Delegate all validation to convert_to(), which handles both simple
+                        // units (registry lookup + alias canonicalisation) and compound unit
+                        // expressions (atom parsing + dimension equality check).
                         let converted = tv.convert_to(&target)?;
                         *self.state.stack.last_mut().unwrap() = CalcValue::Tagged(converted);
                         Ok(())
@@ -1858,5 +1851,50 @@ mod tests {
         app.apply(Action::Execute(Op::Clear));
         assert_eq!(app.state.stack.len(), 0);
         assert!(app.error_message.is_none());
+    }
+
+    // ── AC-14: compound unit conversion through full app dispatch ─────────────
+
+    // AC-14: ConvertUnit with compound source and compound target succeeds end-to-end
+    #[test]
+    fn test_convert_unit_compound_to_compound() {
+        use crate::engine::units::{TaggedValue, DimensionVector};
+        use dashu::float::FBig;
+        let mut app = App::new();
+        // Push 1 m/s onto the stack
+        let tv = TaggedValue::new_compound(
+            FBig::try_from(1.0_f64).unwrap(),
+            "m/s".to_string(),
+            DimensionVector { m: 1, s: -1, ..Default::default() },
+        );
+        app.state.stack.push(CalcValue::Tagged(tv));
+        // Convert to ft/s — previously failed with "Unknown unit: ft/s"
+        app.apply(Action::ConvertUnit("ft/s".to_string()));
+        assert!(app.error_message.is_none(), "expected no error: {:?}", app.error_message);
+        match app.state.stack.last() {
+            Some(CalcValue::Tagged(tv)) => {
+                assert_eq!(tv.unit, "ft/s", "expected ft/s unit, got {}", tv.unit);
+                // 1 m/s ≈ 3.28084 ft/s
+                let val = tv.amount.to_f64().value();
+                assert!((val - 3.28084).abs() < 0.001, "expected ~3.28 ft/s, got {}", val);
+            }
+            other => panic!("expected Tagged value, got {:?}", other),
+        }
+    }
+
+    // AC-14: ConvertUnit with genuinely unknown unit still errors
+    #[test]
+    fn test_convert_unit_unknown_compound_errors() {
+        use crate::engine::units::{TaggedValue, DimensionVector};
+        use dashu::float::FBig;
+        let mut app = App::new();
+        let tv = TaggedValue::new_compound(
+            FBig::try_from(1.0_f64).unwrap(),
+            "m/s".to_string(),
+            DimensionVector { m: 1, s: -1, ..Default::default() },
+        );
+        app.state.stack.push(CalcValue::Tagged(tv));
+        app.apply(Action::ConvertUnit("fathoms/fortnight".to_string()));
+        assert!(app.error_message.is_some(), "expected error for unknown unit");
     }
 }
