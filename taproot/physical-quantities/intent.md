@@ -18,6 +18,9 @@ Enable users to tag stack values with physical units and convert between compati
 - Currency conversion is out of scope
 - Cross-category arithmetic (e.g. `1 oz + 1 ft`) must produce a clear error, not a silent wrong result
 
+## Behaviours <!-- taproot-managed -->
+- [Unit-Aware Values](./unit-aware-values/usecase.md)
+
 ## Status
 - **State:** draft
 - **Created:** 2026-03-25
