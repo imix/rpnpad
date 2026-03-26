@@ -24,7 +24,7 @@
 - `src/input/mode.rs` — add `AppMode::ConvertInput(String)`
 - `src/input/handler.rs` — map `U` → `EnterConvertMode` in Normal; handle `ConvertInput` mode keys
 - `src/tui/app.rs` — handle `ConvertUnit`, `EnterConvertMode`, `ConvertChar/Backspace/Submit/Cancel`
-- `src/tui/widgets/hints_pane.rs` — add `U  unit` to stack ops; add ConvertInput mode hints
+- `src/tui/widgets/hints_pane.rs` — add `U  unit` to stack ops; add ConvertInput mode hints; add compound unit branch showing COMPOUND UNIT section with source unit and prompt
 - `README.md` — document unit tagging syntax, convert command, arithmetic behaviour
 
 ## Commits
@@ -40,9 +40,12 @@
 - `src/input/commands.rs` — `in g`, `in °F`, `in F` (alias), `in m` commands
 - `src/engine/ops.rs` — AC-7 (same unit add), AC-8 (cross-unit add → p1's unit), AC-11 (incompatible categories error), AC-14 (scalar×tagged), AC-15 (plain+tagged error), AC-17 (same-unit div → dimensionless), AC-18 (tagged×tagged error), AC-20 (negate preserves unit)
 - `src/tui/app.rs` — AC-3 (weight convert), AC-5 (°F→°C), AC-12 (incompatible convert error), AC-13 (convert on unitless error)
+- `src/tui/widgets/hints_pane.rs` — AC-23 compound unit: ConvertInput shows COMPOUND UNIT section with source unit; does not show WEIGHT/LENGTH/TEMPERATURE groups
 
 ## DoD Resolutions
 - condition: document-current | note: README updated with Physical Units section (unit input syntax, supported units table, conversion with U key and `in <unit>` Alpha command, arithmetic behaviour for same-category values, scalar multiplication, dimensionless division, temperature conversion). U key added to Normal Mode key reference table. Unit Mode key table added. `in <unit>` added to Alpha mode commands table. All user-visible behaviour is accurately reflected. | resolved: 2026-03-26
+- condition: document-current | note: Hints pane UI fix only: CompoundInput now shows COMPOUND UNIT section instead of irrelevant Weight/Length/Temperature groups when a compound unit is at stack top. No new key bindings, modes, or conversion behaviors introduced. README already documents compound unit conversion (U key, 27.78 m/s → km/h example). Nothing to update. | resolved: 2026-03-26T12:12:16.059Z
+
 - condition: document-current | note: FBig scale factor arithmetic is an internal precision fix — unit conversion produces clean results without noise (37.27704 not 37.27704000000001). No new user-visible behaviour, key bindings, or configuration options. README unit arithmetic documentation already accurately describes the behaviour. | resolved: 2026-03-26T07:47:43.161Z
 
 - condition: document-current (rework) | note: Hint panel changes are internal UI only — no new user-visible behaviour. README already accurately describes U key and unit conversion. No README change required. | resolved: 2026-03-26

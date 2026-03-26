@@ -173,13 +173,15 @@ pub fn render(f: &mut Frame, area: Rect, mode: &AppMode, state: &CalcState) {
     }
 
     if matches!(mode, AppMode::ConvertInput(_)) {
-        let category = state.stack.last().and_then(|v| {
-            if let CalcValue::Tagged(tv) = v {
-                tv.unit_def().map(|u| u.category)
-            } else {
-                None
+        // Determine what is at the stack top: simple unit category, compound unit, or nothing.
+        let (category, compound_unit) = match state.stack.last() {
+            Some(CalcValue::Tagged(tv)) => {
+                let cat = tv.unit_def().map(|u| u.category);
+                let compound = if cat.is_none() { Some(tv.unit.as_str()) } else { None };
+                (cat, compound)
             }
-        });
+            _ => (None, None),
+        };
         let mut lines = vec![
             Line::styled("CONVERT TO UNIT", dim),
             Line::raw(""),
@@ -188,30 +190,39 @@ pub fn render(f: &mut Frame, area: Rect, mode: &AppMode, state: &CalcState) {
             Line::raw("Bksp   delete"),
             Line::raw(""),
         ];
-        match category {
-            Some(UnitCategory::Weight) | None => {
-                lines.push(Line::styled("WEIGHT", dim));
-                lines.push(Line::raw("g  kg  lb  oz"));
+        if let Some(unit_str) = compound_unit {
+            // Compound unit: valid targets are open-ended (same dimension vector).
+            // Show source unit as context and prompt for a compatible expression.
+            lines.push(Line::styled("COMPOUND UNIT", dim));
+            lines.push(Line::raw(format!("source: {}", unit_str)));
+            lines.push(Line::raw(""));
+            lines.push(Line::styled("enter target unit expression", dim));
+        } else {
+            match category {
+                Some(UnitCategory::Weight) | None => {
+                    lines.push(Line::styled("WEIGHT", dim));
+                    lines.push(Line::raw("g  kg  lb  oz"));
+                }
+                _ => {}
             }
-            _ => {}
-        }
-        match category {
-            Some(UnitCategory::Length) | None => {
-                if category.is_none() { lines.push(Line::raw("")); }
-                lines.push(Line::styled("LENGTH", dim));
-                lines.push(Line::raw("cm  ft  in  km"));
-                lines.push(Line::raw("m   mi  mm  yd"));
+            match category {
+                Some(UnitCategory::Length) | None => {
+                    if category.is_none() { lines.push(Line::raw("")); }
+                    lines.push(Line::styled("LENGTH", dim));
+                    lines.push(Line::raw("cm  ft  in  km"));
+                    lines.push(Line::raw("m   mi  mm  yd"));
+                }
+                _ => {}
             }
-            _ => {}
-        }
-        match category {
-            Some(UnitCategory::Temperature) | None => {
-                if category.is_none() { lines.push(Line::raw("")); }
-                lines.push(Line::styled("TEMPERATURE", dim));
-                lines.push(Line::raw("°C  °F"));
-                lines.push(Line::styled("also: C  F  degC  degF", dim));
+            match category {
+                Some(UnitCategory::Temperature) | None => {
+                    if category.is_none() { lines.push(Line::raw("")); }
+                    lines.push(Line::styled("TEMPERATURE", dim));
+                    lines.push(Line::raw("°C  °F"));
+                    lines.push(Line::styled("also: C  F  degC  degF", dim));
+                }
+                _ => {}
             }
-            _ => {}
         }
         f.render_widget(Paragraph::new(lines), area);
         return;
@@ -990,6 +1001,46 @@ mod tests {
         assert!(content.contains("WEIGHT"), "should show WEIGHT with no context: {:?}", content);
         assert!(content.contains("LENGTH"), "should show LENGTH with no context: {:?}", content);
         assert!(content.contains("TEMPERATURE"), "should show TEMPERATURE with no context: {:?}", content);
+    }
+
+    // AC-23: ConvertInput shows COMPOUND UNIT section when top is a compound unit
+    #[test]
+    fn test_convert_input_compound_unit_shows_compound_section() {
+        use crate::engine::units::{TaggedValue, DimensionVector};
+        use dashu::float::FBig;
+        let mut s = CalcState::new();
+        // km/h: m¹ s⁻¹
+        let tv = TaggedValue::new_compound(
+            FBig::try_from(50.0_f64).unwrap(),
+            "km/h".to_string(),
+            DimensionVector { m: 1, s: -1, ..Default::default() },
+        );
+        s.stack.push(CalcValue::Tagged(tv));
+        let buf = render_hints(AppMode::ConvertInput(String::new()), s, 40, 20);
+        let content = full_content(&buf);
+        assert!(content.contains("COMPOUND UNIT"), "should show COMPOUND UNIT: {:?}", content);
+        assert!(content.contains("km/h"), "should show source unit: {:?}", content);
+        assert!(!content.contains("WEIGHT"), "should NOT show WEIGHT: {:?}", content);
+        assert!(!content.contains("LENGTH"), "should NOT show LENGTH: {:?}", content);
+        assert!(!content.contains("TEMPERATURE"), "should NOT show TEMPERATURE: {:?}", content);
+    }
+
+    // AC-23: ConvertInput compound section shows prompt text
+    #[test]
+    fn test_convert_input_compound_unit_shows_prompt() {
+        use crate::engine::units::{TaggedValue, DimensionVector};
+        use dashu::float::FBig;
+        let mut s = CalcState::new();
+        let tv = TaggedValue::new_compound(
+            FBig::try_from(9.8_f64).unwrap(),
+            "m/s2".to_string(),
+            DimensionVector { m: 1, s: -2, ..Default::default() },
+        );
+        s.stack.push(CalcValue::Tagged(tv));
+        let buf = render_hints(AppMode::ConvertInput(String::new()), s, 40, 20);
+        let content = full_content(&buf);
+        assert!(content.contains("m/s2"), "should show source unit: {:?}", content);
+        assert!(content.contains("enter target"), "should show prompt: {:?}", content);
     }
 
     // AC-23: ConvertInput panel does NOT show normal mode sections
