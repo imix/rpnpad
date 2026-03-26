@@ -19,7 +19,7 @@
 - `src/tui/layout.rs` — passes `app.last_command.as_deref()` to mode_bar render
 
 ## Commits
-- `931549af4b` — fix: remove phantom 'd → drop' label in Normal mode (auto-linked by taproot link-commits)
+- `931549accbd1494801c0955bb9a26ad6d521cfca` — (auto-linked by taproot link-commits)
 - `df2f91a09213a700959857fe58542a0a0149b1ba` — (auto-linked by taproot link-commits)
 - `7a1689f409e942137ba429983ca2c561dd0f01fa` — (auto-linked by taproot link-commits)
 
