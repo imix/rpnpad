@@ -8,6 +8,7 @@ use ratatui::{
 
 use crate::engine::base::Base;
 use crate::engine::stack::CalcState;
+use crate::engine::value::CalcValue;
 use crate::input::mode::{AppMode, ChordCategory};
 
 const ARITHMETIC: &[(&str, &str)] = &[
@@ -31,8 +32,9 @@ const STACK_OPS: &[(&str, &str)] = &[
     ("u", "undo"),
     ("y", "yank"),
     ("S", "store"),
-    ("U", "unit"),
 ];
+
+const UNIT_OPS: &[(&str, &str)] = &[("U", "convert")];
 
 const SESSION_OPS: &[(&str, &str)] = &[("Q", "quit")];
 
@@ -177,9 +179,16 @@ pub fn render(f: &mut Frame, area: Rect, mode: &AppMode, state: &CalcState) {
             Line::raw("Esc    cancel"),
             Line::raw("Bksp   delete"),
             Line::raw(""),
-            Line::styled("e.g. g  kg  oz  lb", dim),
-            Line::styled("     m  cm  ft  in", dim),
-            Line::styled("     °C  °F  C  F", dim),
+            Line::styled("WEIGHT", dim),
+            Line::raw("g  kg  lb  oz"),
+            Line::raw(""),
+            Line::styled("LENGTH", dim),
+            Line::raw("cm  ft  in  km"),
+            Line::raw("m   mi  mm  yd"),
+            Line::raw(""),
+            Line::styled("TEMPERATURE", dim),
+            Line::raw("°C  °F"),
+            Line::styled("also: C  F  degC  degF", dim),
         ];
         f.render_widget(Paragraph::new(lines), area);
         return;
@@ -271,6 +280,13 @@ pub fn render(f: &mut Frame, area: Rect, mode: &AppMode, state: &CalcState) {
         lines.extend(chord_leaders_to_lines(CHORD_LEADERS_DEPTH0));
     } else {
         lines.extend(chord_leaders_to_lines(CHORD_LEADERS));
+    }
+
+    let top_is_tagged = state.stack.last().map(|v| matches!(v, CalcValue::Tagged(_))).unwrap_or(false);
+    if top_is_tagged {
+        lines.push(Line::raw(""));
+        lines.push(Line::styled("UNITS", dim));
+        lines.extend(entries_to_lines(UNIT_OPS));
     }
 
     lines.push(Line::raw(""));
@@ -852,5 +868,103 @@ mod tests {
         let buf = render_hints(AppMode::PrecisionInput(String::new()), CalcState::new(), 40, 10);
         let content = full_content(&buf);
         assert!(content.contains("PRECISION"), "PRECISION mode should show hint: {:?}", content);
+    }
+
+    // ── unit-aware-values AC-23: ConvertInput hint panel ─────────────────────
+
+    // AC-23: ConvertInput panel shows CONVERT TO UNIT header
+    #[test]
+    fn test_convert_input_mode_shows_header() {
+        let buf = render_hints(AppMode::ConvertInput(String::new()), CalcState::new(), 40, 20);
+        let content = full_content(&buf);
+        assert!(content.contains("CONVERT TO UNIT"), "ConvertInput panel should show header: {:?}", content);
+    }
+
+    // AC-23: ConvertInput panel shows key table (Enter/Esc/Bksp)
+    #[test]
+    fn test_convert_input_mode_shows_key_table() {
+        let buf = render_hints(AppMode::ConvertInput(String::new()), CalcState::new(), 40, 20);
+        let content = full_content(&buf);
+        assert!(content.contains("convert"), "should show 'convert' action: {:?}", content);
+        assert!(content.contains("cancel"), "should show 'cancel' action: {:?}", content);
+        assert!(content.contains("delete"), "should show 'delete' action: {:?}", content);
+    }
+
+    // AC-23: ConvertInput panel shows WEIGHT group
+    #[test]
+    fn test_convert_input_mode_shows_weight_group() {
+        let buf = render_hints(AppMode::ConvertInput(String::new()), CalcState::new(), 40, 20);
+        let content = full_content(&buf);
+        assert!(content.contains("WEIGHT"), "should show WEIGHT group: {:?}", content);
+        assert!(content.contains("oz"), "should show oz: {:?}", content);
+        assert!(content.contains("kg"), "should show kg: {:?}", content);
+    }
+
+    // AC-23: ConvertInput panel shows LENGTH group
+    #[test]
+    fn test_convert_input_mode_shows_length_group() {
+        let buf = render_hints(AppMode::ConvertInput(String::new()), CalcState::new(), 40, 20);
+        let content = full_content(&buf);
+        assert!(content.contains("LENGTH"), "should show LENGTH group: {:?}", content);
+        assert!(content.contains("ft"), "should show ft: {:?}", content);
+        assert!(content.contains("km"), "should show km: {:?}", content);
+    }
+
+    // AC-23: ConvertInput panel shows TEMPERATURE group with aliases
+    #[test]
+    fn test_convert_input_mode_shows_temperature_group() {
+        let buf = render_hints(AppMode::ConvertInput(String::new()), CalcState::new(), 40, 20);
+        let content = full_content(&buf);
+        assert!(content.contains("TEMPERATURE"), "should show TEMPERATURE group: {:?}", content);
+        assert!(content.contains("degC") || content.contains("degF"), "should show aliases: {:?}", content);
+    }
+
+    // AC-23: ConvertInput panel does NOT show normal mode sections
+    #[test]
+    fn test_convert_input_mode_hides_normal_sections() {
+        let buf = render_hints(AppMode::ConvertInput(String::new()), CalcState::new(), 40, 20);
+        let content = full_content(&buf);
+        assert!(!content.contains("ARITHMETIC"), "should not show ARITHMETIC: {:?}", content);
+        assert!(!content.contains("STACK"), "should not show STACK: {:?}", content);
+    }
+
+    // ── unit-aware-values AC-24: UNITS section visibility ────────────────────
+
+    // AC-24: UNITS section shown when stack top is tagged
+    #[test]
+    fn test_units_section_shown_when_top_is_tagged() {
+        use crate::engine::units::TaggedValue;
+        let mut s = CalcState::new();
+        s.stack.push(CalcValue::Tagged(TaggedValue::new(1.9, "oz")));
+        let buf = render_hints(AppMode::Normal, s, 40, 30);
+        let content = full_content(&buf);
+        assert!(content.contains("UNITS"), "UNITS section should appear when top is tagged: {:?}", content);
+        assert!(content.contains('U'), "U key should appear in UNITS section: {:?}", content);
+        assert!(content.contains("convert"), "convert label should appear: {:?}", content);
+    }
+
+    // AC-24: UNITS section absent when stack top is plain number
+    #[test]
+    fn test_units_section_absent_when_top_is_plain() {
+        let buf = render_hints(AppMode::Normal, state_with_depth(1), 40, 25);
+        let content = full_content(&buf);
+        assert!(!content.contains("UNITS"), "UNITS section should be absent for plain stack: {:?}", content);
+    }
+
+    // AC-24: UNITS section absent when stack is empty
+    #[test]
+    fn test_units_section_absent_when_stack_empty() {
+        let buf = render_hints(AppMode::Normal, CalcState::new(), 40, 20);
+        let content = full_content(&buf);
+        assert!(!content.contains("UNITS"), "UNITS section should be absent when stack is empty: {:?}", content);
+    }
+
+    // U key no longer appears in STACK section
+    #[test]
+    fn test_u_key_not_in_stack_section() {
+        // With a plain stack, U should not appear at all (UNITS section hidden)
+        let buf = render_hints(AppMode::Normal, state_with_depth(1), 40, 25);
+        let content = full_content(&buf);
+        assert!(!content.contains("UNITS"), "no UNITS section for plain value: {:?}", content);
     }
 }
