@@ -28,7 +28,7 @@
 - `README.md` — document unit tagging syntax, convert command, arithmetic behaviour
 
 ## Commits
-- (to be filled by taproot link-commits)
+- a56d5b4 taproot(physical-quantities/unit-aware-values): implement unit-tagged values
 
 ## Tests
 - `src/engine/units.rs` — unit conversion math: weight (oz↔g, lb↔kg), length (ft↔m, in↔cm), temperature (°F↔°C); incompatible category error; unknown unit lookup
