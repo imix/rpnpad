@@ -224,12 +224,12 @@ fn tagged_binary_op(
                         )));
                     }
                     // Convert y to x's unit, operate, result has x's unit
-                    let converted_y = crate::engine::units::convert(ty.amount, unit_y, unit_x)?;
+                    let converted_y = crate::engine::units::convert(ty.amount.to_f64().value(), unit_y, unit_x)?;
                     let plain_y = CalcValue::from_f64(converted_y);
-                    let plain_x = CalcValue::from_f64(tx.amount);
+                    let plain_x = CalcValue::Float(tx.amount.clone());
                     let plain_result = f(plain_y, plain_x)?;
                     let result = CalcValue::Tagged(TaggedValue {
-                        amount: plain_result.to_f64(),
+                        amount: FBig::try_from(plain_result.to_f64()).unwrap_or(FBig::ZERO),
                         unit: tx.unit.clone(),
                     });
                     state.stack.truncate(n - 2);
@@ -246,9 +246,9 @@ fn tagged_binary_op(
                         ));
                     }
                     // Same-category division: convert y to x's unit, divide → dimensionless
-                    let converted_y = crate::engine::units::convert(ty.amount, unit_y, unit_x)?;
+                    let converted_y = crate::engine::units::convert(ty.amount.to_f64().value(), unit_y, unit_x)?;
                     let plain_y = CalcValue::from_f64(converted_y);
-                    let plain_x = CalcValue::from_f64(tx.amount);
+                    let plain_x = CalcValue::Float(tx.amount.clone());
                     let result = f(plain_y, plain_x)?;
                     state.stack.truncate(n - 2);
                     state.push(result);
@@ -277,7 +277,7 @@ fn tagged_binary_op(
                         (_, CalcValue::Tagged(t)) => (t.clone(), y.clone(), true),
                         _ => unreachable!(),
                     };
-                    let plain_tagged = CalcValue::from_f64(tagged.amount);
+                    let plain_tagged = CalcValue::Float(tagged.amount.clone());
                     let (a_arg, b_arg) = if tagged_is_x {
                         (plain.clone(), plain_tagged)
                     } else {
@@ -285,7 +285,7 @@ fn tagged_binary_op(
                     };
                     let plain_result = f(a_arg, b_arg)?;
                     let result = CalcValue::Tagged(TaggedValue {
-                        amount: plain_result.to_f64(),
+                        amount: FBig::try_from(plain_result.to_f64()).unwrap_or(FBig::ZERO),
                         unit: tagged.unit.clone(),
                     });
                     state.stack.truncate(n - 2);
@@ -296,10 +296,10 @@ fn tagged_binary_op(
                     match (&y, &x) {
                         (CalcValue::Tagged(ty), _) => {
                             // tagged(y) / plain(x) → result has tagged's unit
-                            let plain_y = CalcValue::from_f64(ty.amount);
+                            let plain_y = CalcValue::Float(ty.amount.clone());
                             let plain_result = f(plain_y, x.clone())?;
                             let result = CalcValue::Tagged(TaggedValue {
-                                amount: plain_result.to_f64(),
+                                amount: FBig::try_from(plain_result.to_f64()).unwrap_or(FBig::ZERO),
                                 unit: ty.unit.clone(),
                             });
                             state.stack.truncate(n - 2);
@@ -335,14 +335,14 @@ fn tagged_unary_op(
     let top = state.peek().ok_or(CalcError::StackUnderflow)?.clone();
     match top {
         CalcValue::Tagged(ref t) => {
-            let plain = CalcValue::from_f64(t.amount);
+            let plain = CalcValue::Float(t.amount.clone());
             let plain_result = f(plain)?;
             let unit = t.unit.clone();
             let result = match op {
                 // Sign returns dimensionless (+1, 0, -1)
                 Op::Sign => plain_result,
                 _ => CalcValue::Tagged(TaggedValue {
-                    amount: plain_result.to_f64(),
+                    amount: FBig::try_from(plain_result.to_f64()).unwrap_or(FBig::ZERO),
                     unit,
                 }),
             };

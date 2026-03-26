@@ -1,4 +1,5 @@
 use crate::engine::error::CalcError;
+use dashu::float::FBig;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -104,7 +105,7 @@ fn convert_temperature(amount: f64, from_display: &str, to_display: &str) -> Res
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct TaggedValue {
     /// The numeric amount in the named unit's scale.
-    pub amount: f64,
+    pub amount: FBig,
     /// Unit abbreviation (e.g. "oz", "°F"). Canonical display is looked up via `canonical_display()`.
     pub unit: String,
 }
@@ -114,7 +115,10 @@ impl TaggedValue {
         let unit_str = unit.into();
         // Normalise alias to canonical display string
         let display = canonical_display(&unit_str).to_string();
-        Self { amount, unit: display }
+        Self {
+            amount: FBig::try_from(amount).unwrap_or(FBig::ZERO),
+            unit: display,
+        }
     }
 
     /// Return the static Unit definition, if the unit is known.
@@ -131,13 +135,16 @@ impl TaggedValue {
         let to = lookup_unit(target_display).ok_or_else(|| {
             CalcError::InvalidInput(format!("unknown unit: {}", target_abbrev))
         })?;
-        let converted = convert(self.amount, from, to)?;
-        Ok(TaggedValue { amount: converted, unit: target_display.to_string() })
+        let converted_f64 = convert(self.amount.to_f64().value(), from, to)?;
+        Ok(TaggedValue {
+            amount: FBig::try_from(converted_f64).unwrap_or(FBig::ZERO),
+            unit: target_display.to_string(),
+        })
     }
 
     pub fn display(&self) -> String {
         // Use the canonical display form stored in unit field
-        format!("{} {}", crate::engine::value::format_f64_shortest(self.amount), self.unit)
+        format!("{} {}", crate::engine::value::format_fbig(&self.amount), self.unit)
     }
 }
 
@@ -275,7 +282,7 @@ mod tests {
         assert_eq!(tagged.unit, "°F");
         let converted = tagged.convert_to("C").unwrap();
         assert_eq!(converted.unit, "°C");
-        assert!((converted.amount - 37.0).abs() < 0.001);
+        assert!((converted.amount.to_f64().value() - 37.0).abs() < 0.001);
     }
 
     // ── incompatible categories ───────────────────────────────────────────────
@@ -309,7 +316,7 @@ mod tests {
     fn test_tagged_value_new_normalises_alias() {
         let t = TaggedValue::new(98.6, "F");
         assert_eq!(t.unit, "°F");
-        assert_eq!(t.amount, 98.6);
+        assert!((t.amount.to_f64().value() - 98.6).abs() < 1e-10);
     }
 
     #[test]
@@ -323,7 +330,7 @@ mod tests {
         let t = TaggedValue::new(1.9, "oz");
         let converted = t.convert_to("g").unwrap();
         assert_eq!(converted.unit, "g");
-        assert!((converted.amount - 53.86).abs() < 0.01);
+        assert!((converted.amount.to_f64().value() - 53.86).abs() < 0.01);
     }
 
     #[test]
