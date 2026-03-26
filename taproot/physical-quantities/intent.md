@@ -7,10 +7,10 @@
 Enable users to tag stack values with physical units and convert between compatible units with a single command. Arithmetic between unit-tagged values preserves the unit, so calculations involving real-world quantities flow naturally inside rpnpad without context-switching.
 
 ## Success Criteria
-- [ ] A value on the stack can be tagged with a unit (e.g. `1.9 oz`, `6 ft`, `98.6 °F`)
-- [ ] A tagged value converts to a compatible unit on demand (e.g. `1.9 oz` → `53.86 g`)
-- [ ] Arithmetic between same-unit values preserves the unit (e.g. `1.9 oz + 2 oz` → `3.9 oz`)
-- [ ] Supported categories on first delivery: weight, length, temperature (imperial ↔ metric)
+- [x] A value on the stack can be tagged with a unit (e.g. `1.9 oz`, `6 ft`, `98.6 °F`)
+- [x] A tagged value converts to a compatible unit on demand (e.g. `1.9 oz` → `53.86 g`)
+- [x] Arithmetic between same-unit values preserves the unit (e.g. `1.9 oz + 2 oz` → `3.9 oz`)
+- [x] Supported categories on first delivery: weight, length, temperature (imperial ↔ metric)
 - [ ] The unit model supports compound units (e.g. m/s, kg·m/s²) internally from the start, so derived units can be added without refactoring
 
 ## Constraints
@@ -22,9 +22,9 @@ Enable users to tag stack values with physical units and convert between compati
 - [Unit-Aware Values](./unit-aware-values/usecase.md)
 
 ## Status
-- **State:** draft
+- **State:** active
 - **Created:** 2026-03-25
-- **Last reviewed:** 2026-03-25
+- **Last reviewed:** 2026-03-26
 
 ## Notes
 - The HP48 unit object model is a useful reference: values carry a unit tag, and the calculator handles conversion automatically when units are compatible.
