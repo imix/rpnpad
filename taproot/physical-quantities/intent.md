@@ -20,6 +20,8 @@ Enable users to tag stack values with physical units and convert between compati
 
 ## Behaviours <!-- taproot-managed -->
 - [Unit-Aware Values](./unit-aware-values/usecase.md)
+- [Compound Unit Data Model](./compound-unit-model/usecase.md)
+- [Compound Unit Operations](./compound-unit-operations/usecase.md)
 
 ## Status
 - **State:** active

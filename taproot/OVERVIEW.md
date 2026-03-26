@@ -63,6 +63,8 @@ stacked values and control the numeric modes that govern their computation.
 
 **Goal:** Enable users to tag stack values with physical units and convert between compatible units with a single command
 
+- **[compound-unit-model](./physical-quantities/compound-unit-model/usecase.md)** `[proposed]` — Actor: rpnpad application (internal refactor — no new user-visible behaviour; the observable outcomes are regression stability and graceful session migration)
+- **[compound-unit-operations](./physical-quantities/compound-unit-operations/usecase.md)** `[proposed]` — Actor: CLI power user (engineer, scientist, or anyone computing with derived physical quantities such as speed, force, or area)
 - **[unit-aware-values](./physical-quantities/unit-aware-values/usecase.md)** `[implemented]` — Actor: CLI power user (engineer, scientist, or anyone performing real-world calculations)
   - [tui](./physical-quantities/unit-aware-values/tui/impl.md) `[complete]` (1 commit, 6 tests)
 
@@ -103,4 +105,4 @@ mistakes at any point, and store intermediate results in named registers.
   - [tui](./state-and-memory/undo-redo/tui/impl.md) `[complete]` (0 commits, 1 test)
 
 ---
-8 intents · 24 behaviours · 24 implementations · 24/24 complete
+8 intents · 26 behaviours · 24 implementations · 24/24 complete
