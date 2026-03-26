@@ -67,7 +67,8 @@ stacked values and control the numeric modes that govern their computation.
   - [tui](./physical-quantities/compound-unit-model/tui/impl.md) `[complete]` (2 commits, 2 tests)
 - **[compound-unit-operations](./physical-quantities/compound-unit-operations/usecase.md)** `[implemented]` — Actor: CLI power user (engineer, scientist, or anyone computing with derived physical quantities such as speed, force, or area)
   - [tui](./physical-quantities/compound-unit-operations/tui/impl.md) `[complete]` (3 commits, 4 tests)
-- **[unit-aliases](./physical-quantities/unit-aliases/usecase.md)** `[specified]` — Actor: User (CLI power user — engineer or scientist entering physical quantities)
+- **[unit-aliases](./physical-quantities/unit-aliases/usecase.md)** `[implemented]` — Actor: User (CLI power user — engineer or scientist entering physical quantities)
+  - [tui](./physical-quantities/unit-aliases/tui/impl.md) `[complete]` (2 commits, 3 tests)
 - **[unit-aware-values](./physical-quantities/unit-aware-values/usecase.md)** `[implemented]` — Actor: CLI power user (engineer, scientist, or anyone performing real-world calculations)
   - [tui](./physical-quantities/unit-aware-values/tui/impl.md) `[complete]` (4 commits, 8 tests)
 
@@ -108,4 +109,4 @@ mistakes at any point, and store intermediate results in named registers.
   - [tui](./state-and-memory/undo-redo/tui/impl.md) `[complete]` (0 commits, 1 test)
 
 ---
-8 intents · 27 behaviours · 26 implementations · 26/26 complete
+8 intents · 27 behaviours · 27 implementations · 27/27 complete

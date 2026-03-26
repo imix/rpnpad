@@ -43,10 +43,10 @@ User (CLI power user)
 - **Outcome:** User gets confirmation that the copy action fired
 
 ### Mode-change chord
-- **Trigger:** User executes a mode-change chord (e.g. `m` then `d` for DEG, `x` then `h` for HEX)
+- **Trigger:** User executes a mode-change chord via `C›` (e.g. `C` then `d` for DEG, `C` then `h` for HEX)
 - **Steps:**
   1. Angle mode or base changes
-  2. Mode bar shows the chord and the new mode name: `md → deg`, `xh → hex`
+  2. Mode bar shows the chord and the new mode name: `Cd → deg`, `Ch → hex`
 - **Outcome:** User sees which chord triggered the mode change; mode indicator on the right also updates
 
 ### Session start (no prior operation)
@@ -137,8 +137,8 @@ stateDiagram-v2
 
 **AC-10: Mode-change chord updates the label**
 - Given Normal mode
-- When the user presses `m` then `d` (angle mode → DEG)
-- Then the mode bar centre shows `md → deg`
+- When the user presses `C` then `d` (angle mode → DEG via `C›` chord)
+- Then the mode bar centre shows `Cd → deg`
 
 **AC-11: EnterStoreMode does not update the label**
 - Given the mode bar centre shows `+ → add`
@@ -151,7 +151,7 @@ stateDiagram-v2
 ## Status
 - **State:** implemented
 - **Created:** 2026-03-25
-- **Last reviewed:** 2026-03-25
+- **Last reviewed:** 2026-03-26
 
 ## Notes
 - **Operations that update the label:** all `Execute(Op)`, `Undo`, `Redo`, `Yank`, mode-change chords (`SetAngleMode`, `SetBase`, `SetHexStyle`), and `Enter` in Normal mode (→ Dup). This is the complete set.
