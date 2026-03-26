@@ -259,6 +259,12 @@ sequenceDiagram
 - When the hints pane renders
 - Then it includes a line showing that a unit abbreviation may follow the number, e.g. `1.9 oz`, `6 ft`, `98.6 F`
 
+**AC-26: ConvertInput mode shows typed unit expression in the input line**
+- Given rpnpad is in ConvertInput mode
+- When the user has typed some characters (e.g. `km`)
+- Then the input line displays `> km_` (typed text followed by cursor)
+- And when the buffer is empty, the input line displays `> _` (cursor only)
+
 **AC-24: UNITS section in Normal mode is conditional on a tagged stack top**
 - Given the stack top is a unit-tagged value
 - When the hints pane renders in Normal mode
