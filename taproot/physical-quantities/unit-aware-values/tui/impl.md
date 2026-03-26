@@ -44,7 +44,7 @@
 - condition: document-current (rework) | note: Hint panel changes are internal UI only — no new user-visible behaviour. README already accurately describes U key and unit conversion. No README change required. | resolved: 2026-03-26
 
 ## Status
-- **State:** complete
+- **State:** needs-rework
 - **Created:** 2026-03-26
 - **Last verified:** 2026-03-26
 

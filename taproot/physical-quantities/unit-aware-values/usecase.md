@@ -245,13 +245,18 @@ sequenceDiagram
 - When rpnpad is reopened
 - Then the stack still displays `1.9 oz` at position 1
 
-**AC-23: ConvertInput hint panel shows complete grouped unit reference**
+**AC-23: ConvertInput hint panel shows only the compatible unit group**
 - Given the user presses `U` and the mode bar shows `[UNIT]`
 - When the hints pane renders
-- Then it displays a mode header `CONVERT TO UNIT`, a key table listing `Enter` (convert), `Esc` (cancel), `Backspace` (delete), and a complete unit reference grouped by category:
-  - Weight: `g`  `kg`  `lb`  `oz`
-  - Length: `cm`  `ft`  `in`  `km`  `m`  `mi`  `mm`  `yd`
-  - Temperature: `°C`  `°F`  (aliases: `C`  `degC`  `degF`  `F`)
+- Then it displays a mode header `CONVERT TO UNIT`, a key table listing `Enter` (convert), `Esc` (cancel), `Backspace` (delete), and a unit reference showing only the group compatible with the stack top's unit category:
+  - If top is a weight value: Weight group only — `g`  `kg`  `lb`  `oz`
+  - If top is a length value: Length group only — `cm`  `ft`  `in`  `km`  `m`  `mi`  `mm`  `yd`
+  - If top is a temperature value: Temperature group only — `°C`  `°F`  (aliases: `C`  `degC`  `degF`  `F`)
+
+**AC-25: Insert mode hints show unit input syntax**
+- Given rpnpad is in Insert mode (user is typing a number)
+- When the hints pane renders
+- Then it includes a line showing that a unit abbreviation may follow the number, e.g. `1.9 oz`, `6 ft`, `98.6 F`
 
 **AC-24: UNITS section in Normal mode is conditional on a tagged stack top**
 - Given the stack top is a unit-tagged value
