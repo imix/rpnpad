@@ -1,1 +1,1 @@
-- [2026-03-26] a list of aliases from strings like "kph", "N" to the corresponding units km/h or kg m / s2
+- [2026-03-26] output unit aliases: after arithmetic produces kg*m/s2, display as N (collapsed form) — deferred: storage/display entanglement, session.json canonical-vs-display decision, multi-alias ambiguity

@@ -56,6 +56,8 @@ ineed → intent → behaviour → implement → trace → status
 | `/tr-status` | Generate a health dashboard for the hierarchy |
 | `/tr-review` | Stress-test a spec with adversarial questions |
 | `/tr-review-all` | Run review across an entire subtree |
+| `/tr-browse` | Read a hierarchy document section by section in the terminal — with inline editing via `[M] Modify` |
+| `/tr-backlog` | Capture an idea or finding instantly mid-session; called with no args opens triage to discard, keep, or promote items |
 | `/tr-grill-me` | Interview the user relentlessly to sharpen a plan or design |
 | `/tr-research` | Research a domain or technical subject before speccing — local resources, web search, expert grilling |
 | `/tr-sweep` | Apply a uniform task to a filtered set of hierarchy files — enumerate, confirm, then call `taproot apply` |
@@ -77,7 +79,7 @@ ineed → intent → behaviour → implement → trace → status
 | `taproot dod [impl-path]` | Run Definition of Done checks; mark impl complete if all pass |
 | `taproot commithook` | Pre-commit gate: classifies staged files and runs DoR or DoD as appropriate |
 | `taproot update` | Refresh agent adapters, skills, and cross-link sections across the hierarchy |
-| `taproot init` | Initialize Taproot in a project |
+| `taproot init [--template webapp\|book-authoring\|cli-tool]` | Initialize Taproot in a project; optionally copy a starter hierarchy |
 
 ### Rule of Thumb
 
@@ -92,7 +94,7 @@ ineed → intent → behaviour → implement → trace → status
 
    - **If `taproot/OVERVIEW.md` exists**: "Your project has an overview at `taproot/OVERVIEW.md` — read it for a summary of current intents and their status."
    - **If intents exist but no OVERVIEW.md**: "Your project has existing intents. Run `taproot overview` to generate a summary, or use `/tr-status` for a full health report."
-   - **If no intents exist yet** (empty or missing `taproot/`): "This looks like a new project. A good starting point: describe your problem to `/tr-ineed`, or jump straight to `/tr-intent` if you already know what you want to build."
+   - **If no intents exist yet** (empty or missing `taproot/`): "This looks like a new project. You can start from a template (`taproot init --template webapp|book-authoring|cli-tool`) for a pre-populated hierarchy, or describe your problem to `/tr-ineed`, or jump straight to `/tr-intent` if you already know what you want to build."
 
 4. Close with context-aware guidance:
 

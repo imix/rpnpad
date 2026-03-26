@@ -22,6 +22,7 @@ Enable users to tag stack values with physical units and convert between compati
 - [Unit-Aware Values](./unit-aware-values/usecase.md)
 - [Compound Unit Data Model](./compound-unit-model/usecase.md)
 - [Compound Unit Operations](./compound-unit-operations/usecase.md)
+- [User enters a value with a common unit alias](./unit-aliases/usecase.md)
 
 ## Status
 - **State:** active

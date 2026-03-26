@@ -139,6 +139,19 @@ When a `check:` condition is present in `definitionOfReady`, the agent reasons a
 - condition: check: is this spec complete enough? | note: yes, all flows are specified | resolved: 2026-03-20T10:00:00.000Z
 ```
 
+### `require-discussion-log`
+
+Require a `discussion.md` alongside every `impl.md` at declaration commit time. Off by default — enable for teams that want to enforce the record-decision-rationale habit:
+
+```yaml
+definitionOfReady:
+  - require-discussion-log: true
+```
+
+When enabled, the pre-commit hook checks whether `discussion.md` exists in the impl folder before accepting the declaration commit. If missing, the commit is rejected with the expected file path. The check is existence-only — content quality is not verified by the hook.
+
+See `taproot/requirements-compliance/record-decision-rationale/` for what `discussion.md` should contain and how the agent writes it.
+
 ### When DoR runs
 
 DoR runs once: when the declaration commit is made (committing `impl.md` alone, before any source code). It is enforced by the pre-commit hook's declaration tier.
@@ -237,6 +250,26 @@ Applied as a second substitution pass after the language pack (if any). Re-appli
 
 - If any vocabulary key maps to an empty string, `taproot update` aborts with an error message and makes no file changes.
 - If a vocabulary key conflicts with a structural keyword, `taproot update` logs a warning for that key, skips it, and applies all non-conflicting overrides.
+
+---
+
+## CLI invocation
+
+### `cli`
+
+Controls which command agents use when executing taproot CLI steps (e.g. `taproot dod`, `taproot link-commits`). The value is injected into agent adapter files as a machine-readable block — agents read it at session start and substitute it wherever a skill step says `taproot <subcommand>`.
+
+```yaml
+cli: taproot
+```
+
+**Default:** `npx @imix-js/taproot` — works in any environment, whether or not taproot is globally installed.
+
+**Common overrides:**
+- `cli: taproot` — globally installed (`npm install -g @imix-js/taproot`)
+- `cli: ./node_modules/.bin/taproot` — local `devDependency`
+
+**Requires `taproot update`:** yes — the invocation block in agent adapter files is regenerated.
 
 ---
 
