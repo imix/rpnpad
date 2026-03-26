@@ -49,6 +49,8 @@
 - 7066c63 feat: complete Epics 2–4 + layout width cap
 - `d6e76b6316b2d36e54c992dc1cf434d9070b2bc3` — (auto-linked by taproot link-commits)
 - `08fe974b28285b99ef851a0186131def26cc2cf2` — (auto-linked by taproot link-commits)
+- `08937aefe550254109f70852ee11cc2a4dfe07a0` — (auto-linked by taproot link-commits)
+- `bd8d1417ead8410cdaf41c04e57bd7ed42d7831c` — (auto-linked by taproot link-commits)
 
 ## Tests
 - `src/input/handler.rs` — Insert mode op shortcuts (InsertSubmitThen); InsertUnit
