@@ -116,3 +116,78 @@ The agent reads the question text, reasons whether the answer is yes, no, or not
 |---|---|
 | `does this story introduce a cross-cutting concern that warrants a new check-if-affected-by or check-if-affected entry in .taproot/settings.yaml?` | Agent adds the entry to `.taproot/settings.yaml` |
 | `does this story reveal a reusable pattern worth documenting in docs/patterns.md?` | Agent adds a pattern entry to `docs/patterns.md` |
+
+---
+
+## Autonomous mode preamble (`## Autonomous mode` section in skills)
+
+**Problem:** A skill has one or more confirmation prompts (plan approval, staging confirmation, DoD resolution prompts). You want the same skill to work in both interactive and non-interactive (CI, headless agent) contexts without maintaining two versions.
+
+**Pattern:** Add an `## Autonomous mode` section at the top of the skill file (before `## Steps`) that tells the agent to check for autonomous mode activation and apply autonomous notes throughout the steps.
+
+```markdown
+## Autonomous mode
+
+Before following any steps, check whether autonomous mode is active:
+- `TAPROOT_AUTONOMOUS=1` is set in the environment, **or**
+- `--autonomous` was passed as an argument to this skill invocation, **or**
+- `.taproot/settings.yaml` contains `autonomous: true`
+
+If any of these is true, **autonomous mode is active** — apply the autonomous notes at each step where they appear. If none is true, autonomous mode is **inactive** — show confirmation prompts as normal.
+```
+
+Then at each confirmation step, add a conditional note:
+
+```markdown
+**Interactive mode:** ask "Should I proceed?" and wait for confirmation.
+
+**Autonomous mode:** proceed directly without waiting for confirmation.
+```
+
+**When to use it:**
+- The skill has at least one confirmation prompt that would block unattended execution
+- You want CI agents, headless runners, or `TAPROOT_AUTONOMOUS=1` users to be able to run the skill without interaction
+- The skill already exists and works correctly in interactive mode — this is an additive change
+
+**When NOT to use it:**
+- The confirmation prompt exists to prevent destructive irreversible actions (e.g. deleting data, force-pushing) — in these cases, autonomous bypass is unsafe
+- The skill is already fully automated (no prompts) — the preamble adds noise without value
+
+**Taproot's built-in uses:**
+
+| Skill | Prompt bypassed in autonomous mode |
+|---|---|
+| `skills/implement.md` | Plan approval in step 4 |
+| `skills/commit.md` | Staging confirmation in step 3 |
+
+---
+
+## Agent-verified pre-commit check (`taproot truth-sign`)
+
+**Problem:** A pre-commit hook needs to enforce a quality rule that requires semantic reasoning — something a shell command cannot evaluate alone (e.g. "does this spec contradict any active global truths?"). Running an LLM inside a hook is too slow and requires credentials.
+
+**Pattern:** Separate the reasoning from the enforcement:
+1. The skill performs the semantic check (via the agent) before `git commit` is called
+2. If the check passes, the skill runs `taproot truth-sign` to write a session marker (`.taproot/.truth-check-session`) containing a SHA-256 hash of the checked content
+3. The hook validates the marker exists and matches the current staged state — a fast, deterministic check
+
+```bash
+# In the skill (after agent approves):
+taproot truth-sign
+
+# In the hook (synchronous, no LLM needed):
+# validateTruthSession(cwd, stagedDocs, truths)
+```
+
+**When to use it:**
+- The quality rule requires reasoning the CLI cannot perform alone
+- The agent is always in the loop (via a skill) before the commit reaches the hook
+- Content-hash binding is sufficient — the hook does not need to know *why* the check passed, only that it did for this exact content
+
+**Limitation:** If the developer bypasses the skill and runs `git commit` directly, the hook blocks. This is intentional — the pattern enforces use of the skill as the authoritative commit path.
+
+**Taproot's built-in uses:**
+
+| Hook check | Written by | Validates |
+|---|---|---|
+| Truth consistency | `taproot truth-sign` (called by `/tr-commit`) | Staged hierarchy docs are consistent with `taproot/global-truths/` |

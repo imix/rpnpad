@@ -56,6 +56,8 @@ ineed → intent → behaviour → implement → trace → status
 | `/tr-status` | Generate a health dashboard for the hierarchy |
 | `/tr-review` | Stress-test a spec with adversarial questions |
 | `/tr-review-all` | Run review across an entire subtree |
+| `/tr-discover-truths` | Scan the hierarchy for implicit facts and promote them to global truths |
+| `/tr-define-truth` | Create or update a truth entry in `taproot/global-truths/` |
 | `/tr-browse` | Read a hierarchy document section by section in the terminal — with inline editing via `[M] Modify` |
 | `/tr-backlog` | Capture an idea or finding instantly mid-session; called with no args opens triage to discard, keep, or promote items |
 | `/tr-grill-me` | Interview the user relentlessly to sharpen a plan or design |
@@ -105,6 +107,7 @@ ineed → intent → behaviour → implement → trace → status
    **What's next?**
    [A] `/tr-ineed` — capture your first (or next) requirement
    [B] `/tr-status` — see the current project health at a glance
+   [C] `/tr-backlog` — triage captured ideas (only if `.taproot/backlog.md` is non-empty)
 
 ## Output
 
