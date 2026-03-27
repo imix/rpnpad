@@ -19,7 +19,7 @@ User (CLI power user)
 - **Hex style when not in HEX base**: key is treated as `ChordInvalid`; error shown on ErrorLine; chord exits without changing state
 
 ## Error Conditions
-- None — mode switching cannot fail
+- **Hex style key when not in HEX base:** pressing a hex style key (`1`–`4`) while the active base is not HEX → `ChordInvalid` error shown on ErrorLine; chord exits without changing state
 
 ## Postconditions
 - Active mode is updated in CalcState
@@ -58,4 +58,4 @@ stateDiagram-v2
 ## Status
 - **State:** implemented
 - **Created:** 2026-03-21
-- **Last reviewed:** 2026-03-26
+- **Last reviewed:** 2026-03-27

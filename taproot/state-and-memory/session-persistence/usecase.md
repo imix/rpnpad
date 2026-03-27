@@ -20,7 +20,9 @@ User (CLI power user)
 - **SIGTERM**: signal-hook handler triggers the same save path as clean exit
 - **RESET command**: user types `RESET` in alpha mode and presses Enter —
   CalcState is cleared (stack and registers emptied) and the empty state is
-  saved to session.json immediately; takes effect in the running session
+  saved to session.json immediately; takes effect in the running session.
+  RESET is snapshotted by the undo mechanism — the pre-reset state can be
+  restored with Undo.
 
 ## Error Conditions
 - **Write failure** (disk full, permissions): prior session.json left intact
@@ -52,7 +54,7 @@ stateDiagram-v2
 
 **AC-4:** Given `persist_session = false`, then session.json is not read on launch and not written on exit.
 
-**AC-5:** Given rpnpad is running, when the user types `RESET` in alpha mode and presses Enter, then CalcState is cleared and the empty state is written to session.json immediately.
+**AC-5:** Given rpnpad is running, when the user types `RESET` in alpha mode and presses Enter, then CalcState is cleared and the empty state is written to session.json immediately. The pre-reset state is preserved in the undo stack and can be restored with Undo.
 
 ## Related
 - **Sibling**: [User undoes or redoes a state-mutating operation](../undo-redo/usecase.md)
@@ -67,4 +69,4 @@ stateDiagram-v2
 ## Status
 - **State:** implemented
 - **Created:** 2026-03-21
-- **Last reviewed:** 2026-03-24
+- **Last reviewed:** 2026-03-27

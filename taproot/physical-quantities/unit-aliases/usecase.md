@@ -76,7 +76,7 @@ stateDiagram-v2
 - When the user enters `9.8 N`
 - Then a TaggedValue `9.8 kg*m/s2` is pushed onto the stack, identical to entering `9.8 kg*m/s2` directly
 
-**AC-2: Alias-resolved value converts correctly**
+**AC-2: Alias-resolved value converts correctly** *(deferred — `dyn` and `lbf` not yet in unit registry)*
 - Given a TaggedValue `9.8 kg*m/s2` (entered via alias `N`) is at stack position 1
 - When the user converts to `dyn`
 - Then the result is `980000 dyn` and the stack updates correctly
@@ -127,12 +127,12 @@ stateDiagram-v2
 ## Status
 - **State:** implemented
 - **Created:** 2026-03-26
-- **Last reviewed:** 2026-03-26
+- **Last reviewed:** 2026-03-27
 
 ## Notes
 - **Alias table (initial set):** `N` → `kg*m/s2` (newton), `kph` → `km/h` (speed), `Pa` → `kg/m*s2` (pascal), `J` → `kg*m2/s2` (joule), `W` → `kg*m2/s3` (watt). Extend as needed; the table is the single authoritative source.
 - **`Hz` excluded from initial table:** `Hz` = `1/s` (hertz) cannot be expressed as a compound unit string parseable by `parse_unit_expr_atoms` — a dimensionless numerator (`1`) has no unit abbreviation and would fail with `unknown unit: 1`. Defer until the parser supports a `s-1` exponent-only atom notation or a direct `DimensionVector` bypass for special cases.
-- **AC-2 dependency:** assumes `dyn` (dyne) and `lbf` (pound-force) are already recognised units in the unit table. Verify before implementing AC-2's conversion test.
+- **AC-2 dependency:** `dyn` (dyne) and `lbf` (pound-force) are not in the unit table (confirmed). AC-2 is deferred until they are added. `h` (hour) is registered and the `kph` → `km/h` alias path is unblocked.
 - **Canonical display:** stack always shows the canonical compound form (e.g. `kg*m/s2`), never the alias. Output-alias display (collapsing to `N` after arithmetic) is explicitly deferred — see backlog.
 - **User-defined aliases:** out of scope for this behaviour. The alias table is hardcoded; no config mechanism.
 - **Alias lookup order:** alias table checked first; if no match, fall through to existing simple-unit then compound-unit parse paths. This means a future unit added to the simple-unit table that collides with an alias name takes lower priority — alias table wins.
